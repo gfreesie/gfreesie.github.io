@@ -1,0 +1,2602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Investor Match — LHFS</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg viewBox='0 0 52 52' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='52' height='52' rx='10' fill='%230D2045'/%3E%3Cpath d='M26 10L8 24h5v16h9V30h8v10h9V24h5L26 10z' fill='url(%23g)' opacity='.92'/%3E%3Crect x='22' y='30' width='8' height='10' rx='1' fill='rgba(7,17,43,0.7)'/%3E%3Cdefs%3E%3ClinearGradient id='g' x1='8' y1='10' x2='44' y2='40' gradientUnits='userSpaceOnUse'%3E%3Cstop offset='0%25' stop-color='%23E8B84B'/%3E%3Cstop offset='100%25' stop-color='%239A6B18'/%3E%3C/linearGradient%3E%3C/defs%3E%3C/svg%3E">
+  <style>
+    /* ─── Reset & Base ──────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --gold:        #C4902A;
+      --gold-light:  #E8B84B;
+      --gold-dim:    rgba(196, 144, 42, 0.18);
+      --navy:        #0D2045;
+      --navy-deep:   #07112B;
+      --charcoal:    #1C1712;
+      --glass-bg:    rgba(255, 255, 255, 0.042);
+      --glass-bg2:   rgba(255, 255, 255, 0.075);
+      --glass-bd:    rgba(196, 144, 42, 0.28);
+      --glass-bd2:   rgba(255, 255, 255, 0.10);
+      --text-primary:#F8F5F0;
+      --text-muted:  rgba(248, 245, 240, 0.55);
+      --text-gold:   #E8B84B;
+      --radius:      18px;
+      --radius-sm:   11px;
+      --blur:        blur(28px);
+      --electric:    rgba(196, 144, 42, 0.55);
+      --electric-dim:rgba(196, 144, 42, 0.22);
+      --signal-blue: #3B8BEB;
+      --signal-teal: #2BBFAA;
+      --signal-gold: #E8B84B;
+    }
+
+    html, body {
+      min-height: 100vh;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--charcoal);
+      color: var(--text-primary);
+      overflow-x: hidden;
+    }
+
+    /* ─── Background Scene ──────────────────────────────────────────────── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background:
+        radial-gradient(ellipse 90% 70% at 10% 5%,   rgba(27,58,107,0.65) 0%, transparent 55%),
+        radial-gradient(ellipse 50% 40% at 92% 85%,  rgba(196,144,42,0.16) 0%, transparent 50%),
+        radial-gradient(ellipse 70% 60% at 75% 20%,  rgba(13,26,65,0.45)  0%, transparent 55%),
+        radial-gradient(ellipse 100% 80% at 50% 50%, rgba(7,17,43,0.92)   0%, transparent 100%),
+        linear-gradient(160deg, #060f24 0%, #0B1610 40%, #18130F 100%);
+      z-index: 0; pointer-events: none;
+    }
+
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      background-image:
+        radial-gradient(circle at 18% 30%, rgba(196,144,42,0.09) 0%, transparent 32%),
+        radial-gradient(circle at 82% 68%, rgba(27,58,107,0.18)  0%, transparent 38%),
+        radial-gradient(circle at 55% 85%, rgba(196,144,42,0.05) 0%, transparent 28%),
+        radial-gradient(circle at 30% 75%, rgba(27,58,107,0.10)  0%, transparent 25%);
+      z-index: 0; pointer-events: none;
+      animation: ambientPulse 9s ease-in-out infinite alternate;
+    }
+
+    @keyframes ambientPulse {
+      from { opacity: 0.55; }
+      to   { opacity: 1; }
+    }
+
+    /* glow driven by JS sine wave via --breath CSS variable */
+
+    @keyframes pulseGlow {
+      0%,100% { opacity: 0.6; transform: scale(1); }
+      50%      { opacity: 1;   transform: scale(1.15); }
+    }
+
+    /* ─── Layout ────────────────────────────────────────────────────────── */
+    .page {
+      position: relative; z-index: 1;
+      min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 36px 24px 80px;
+    }
+
+    /* ─── Dashboard Grid ─────────────────────────────────────────────────── */
+    .dashboard-grid {
+      width: 100%; max-width: 1260px;
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .dashboard-left  { display: flex; flex-direction: column; gap: 20px; }
+    .dashboard-right { display: flex; flex-direction: column; gap: 16px; }
+
+    /* ─── Header ────────────────────────────────────────────────────────── */
+    .header {
+      width: 100%; max-width: 1260px;
+      display: flex; flex-direction: column; align-items: center;
+      gap: 10px; margin-bottom: 36px;
+    }
+
+    .logo-row { display: flex; align-items: center; gap: 14px; }
+
+    .logo-icon { width: 52px; height: 52px; position: relative; flex-shrink: 0; }
+    .logo-icon svg {
+      width: 100%; height: 100%;
+      filter: drop-shadow(0 0 10px rgba(196,144,42,0.6));
+    }
+
+    .logo-text { display: flex; flex-direction: column; }
+
+    .logo-main {
+      font-size: 26px; font-weight: 700; letter-spacing: 0.04em; line-height: 1;
+      background: linear-gradient(135deg, #F8F5F0 30%, #E8B84B 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .logo-sub {
+      font-size: 9.5px; letter-spacing: 0.24em; text-transform: uppercase;
+      color: var(--text-muted); margin-top: 3px;
+    }
+
+    .header-divider {
+      width: 120px; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+      margin: 6px 0; opacity: 0.7;
+    }
+
+    .header-title {
+      font-size: 13px; letter-spacing: 0.28em; text-transform: uppercase;
+      color: var(--text-gold); opacity: 0.85;
+    }
+
+    /* ─── Glass Card ────────────────────────────────────────────────────── */
+    .glass-card {
+      background: var(--glass-bg);
+      backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+      border: 1px solid var(--electric-dim); border-radius: var(--radius);
+      box-shadow:
+        0 0 0 1px var(--breath-border, rgba(196,144,42,0.28)),
+        0 0 var(--breath-glow, 0px) rgba(196,144,42,0.12),
+        0 0 var(--breath-halo, 0px) rgba(196,144,42,0.05),
+        0 28px 70px rgba(0,0,0,0.55),
+        inset 0 1px 0 rgba(255,255,255,0.07);
+    }
+
+    /* ─── Form Card ─────────────────────────────────────────────────────── */
+    .form-card { width: 100%; padding: 38px 42px 42px; }
+
+    .form-label-group {
+      display: flex; flex-direction: column; gap: 6px;
+      margin-bottom: 28px;
+    }
+
+    .field-label {
+      font-size: 10.5px; letter-spacing: 0.22em; text-transform: uppercase;
+      color: var(--text-gold); font-weight: 600;
+    }
+
+    .field-hint { font-size: 12px; color: var(--text-muted); margin-top: -2px; }
+
+    /* ─── Standard Select ───────────────────────────────────────────────── */
+    .select-wrap { position: relative; }
+
+    .select-wrap::after {
+      content: '';
+      position: absolute; right: 18px; top: 50%; transform: translateY(-50%);
+      width: 0; height: 0;
+      border-left: 5px solid transparent; border-right: 5px solid transparent;
+      border-top: 6px solid var(--gold-light);
+      pointer-events: none;
+    }
+
+    select {
+      appearance: none; -webkit-appearance: none;
+      width: 100%; padding: 14px 46px 14px 18px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(196,144,42,0.28); border-radius: var(--radius-sm);
+      color: var(--text-primary); font-size: 15px; font-family: inherit;
+      cursor: pointer; outline: none;
+      transition: border-color 0.25s, box-shadow 0.25s, background 0.25s;
+    }
+
+    select option { background: #121c30; color: var(--text-primary); }
+    select option[value=""] { color: var(--text-muted); }
+
+    select:focus, select:hover {
+      border-color: var(--gold-light);
+      background: rgba(196,144,42,0.08);
+      box-shadow:
+        0 0 0 3px rgba(196,144,42,0.14),
+        0 0 18px rgba(196,144,42,0.10),
+        0 4px 16px rgba(0,0,0,0.3);
+    }
+
+    /* ─── Transaction Row (select + slide-in refi panel) ───────────────── */
+    .transaction-row {
+      display: flex;
+      align-items: stretch;
+      gap: 0;
+    }
+
+    .transaction-row .select-wrap {
+      flex: 1;
+      min-width: 0;
+      transition: flex 0.38s cubic-bezier(0.22,1,0.36,1);
+      z-index: 1;
+    }
+
+    /* ─── Refi Slide Panel ──────────────────────────────────────────────── */
+    .refi-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      width: 0;
+      min-width: 0;
+      overflow: hidden;
+      opacity: 0;
+      transform: translateX(12px);
+      transition:
+        width     0.38s cubic-bezier(0.22,1,0.36,1),
+        opacity   0.28s ease 0.08s,
+        transform 0.38s cubic-bezier(0.22,1,0.36,1);
+      pointer-events: none;
+    }
+
+    .refi-panel.visible {
+      width: 176px;
+      opacity: 1;
+      transform: translateX(0);
+      pointer-events: auto;
+      padding-left: 12px;
+    }
+
+    .refi-panel-inner {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      height: 100%;
+    }
+
+    .refi-label {
+      font-size: 9px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      padding-left: 2px;
+      white-space: nowrap;
+      margin-bottom: 2px;
+    }
+
+    .refi-btn {
+      flex: 1;
+      padding: 0 14px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(196,144,42,0.22);
+      border-radius: var(--radius-sm);
+      color: var(--text-muted);
+      font-size: 13px;
+      font-family: inherit;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.2s, border-color 0.2s, color 0.2s, box-shadow 0.2s;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .refi-btn:hover {
+      background: rgba(196,144,42,0.08);
+      border-color: rgba(196,144,42,0.45);
+      color: var(--text-primary);
+    }
+
+    .refi-btn.active {
+      background: rgba(196,144,42,0.15);
+      border-color: var(--gold);
+      color: var(--text-gold);
+      box-shadow: 0 0 0 2px rgba(196,144,42,0.12), inset 0 1px 0 rgba(255,255,255,0.07);
+    }
+
+    .refi-btn .refi-icon {
+      width: 16px; height: 16px;
+      opacity: 0.6;
+      flex-shrink: 0;
+    }
+
+    .refi-btn.active .refi-icon { opacity: 1; }
+
+    /* ─── Pill Toggle (Occupancy) ───────────────────────────────────────── */
+    .pill-group {
+      display: flex;
+      gap: 8px;
+    }
+
+    .pill-btn {
+      flex: 1;
+      padding: 13px 10px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(196,144,42,0.22);
+      border-radius: var(--radius-sm);
+      color: var(--text-muted);
+      font-size: 13px;
+      font-family: inherit;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      text-align: center;
+      transition: background 0.2s, border-color 0.2s, color 0.2s, box-shadow 0.2s, transform 0.15s;
+    }
+
+    .pill-btn:hover {
+      background: rgba(196,144,42,0.08);
+      border-color: rgba(196,144,42,0.45);
+      color: var(--text-primary);
+      transform: translateY(-1px);
+    }
+
+    .pill-btn.active {
+      background: rgba(196,144,42,0.15);
+      border-color: var(--gold);
+      color: var(--text-gold);
+      box-shadow: 0 0 0 2px rgba(196,144,42,0.12), inset 0 1px 0 rgba(255,255,255,0.07);
+      transform: translateY(-1px);
+    }
+
+    /* ─── CTA Button ────────────────────────────────────────────────────── */
+    .btn-find {
+      width: 100%; padding: 16px;
+      background: linear-gradient(135deg, #B8821E 0%, #E8B84B 50%, #B8821E 100%);
+      background-size: 200% auto;
+      border: none; border-radius: var(--radius-sm);
+      color: #1C1409; font-size: 13.5px; font-weight: 700;
+      letter-spacing: 0.2em; text-transform: uppercase;
+      cursor: pointer;
+      transition: background-position 0.4s ease, box-shadow 0.3s ease, transform 0.15s ease;
+      box-shadow: 0 4px 20px rgba(196,144,42,0.35), 0 1px 0 rgba(255,255,255,0.2) inset;
+      position: relative; overflow: hidden;
+    }
+
+    .btn-find::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.12) 50%, transparent 60%);
+      background-size: 200% 100%; background-position: 200% 0;
+      transition: background-position 0.5s ease;
+    }
+
+    .btn-find:hover {
+      background-position: right center;
+      box-shadow: 0 6px 30px rgba(196,144,42,0.55), 0 1px 0 rgba(255,255,255,0.25) inset;
+      transform: translateY(-1px);
+    }
+
+    .btn-find:hover::before { background-position: -200% 0; }
+    .btn-find:active { transform: translateY(0); }
+
+    /* ─── Section Divider ───────────────────────────────────────────────── */
+    .section-divider {
+      width: 100%; max-width: 760px;
+      display: flex; align-items: center; gap: 16px;
+      margin: 36px 0 32px;
+    }
+
+    .section-divider span {
+      font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase;
+      color: var(--text-muted); white-space: nowrap;
+    }
+
+    .divider-line {
+      flex: 1; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(196,144,42,0.3), transparent);
+    }
+
+    /* ─── Results ───────────────────────────────────────────────────────── */
+    #results { width: 100%; max-width: 760px; }
+
+    .results-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 16px;
+    }
+
+    /* ─── Investor Card ─────────────────────────────────────────────────── */
+    .investor-card {
+      position: relative;
+      padding: 26px 22px 22px;
+      border-radius: var(--radius);
+      overflow: hidden;
+      animation: cardIn 0.45s cubic-bezier(0.22,1,0.36,1) both;
+    }
+
+    .investor-card::before {
+      content: '';
+      position: absolute; inset: 0; border-radius: var(--radius);
+      padding: 1px;
+      background: linear-gradient(140deg, var(--gold-light), rgba(196,144,42,0.1), rgba(27,58,107,0.4));
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor; mask-composite: exclude;
+      pointer-events: none;
+    }
+
+    .investor-card::after {
+      content: '';
+      position: absolute; top: -40%; left: -20%; width: 80%; height: 80%;
+      background: radial-gradient(ellipse, rgba(196,144,42,0.08) 0%, transparent 65%);
+      pointer-events: none;
+    }
+
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(18px) scale(0.97); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .investor-card:nth-child(2) { animation-delay: 0.07s; }
+    .investor-card:nth-child(3) { animation-delay: 0.14s; }
+    .investor-card:nth-child(4) { animation-delay: 0.21s; }
+
+    .investor-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(196,144,42,0.15);
+      border: 1px solid rgba(196,144,42,0.35);
+      border-radius: 100px; padding: 4px 12px 4px 8px;
+      font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--text-gold); margin-bottom: 14px; font-weight: 600;
+    }
+
+    .badge-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: #4ADE80; box-shadow: 0 0 8px rgba(74,222,128,0.8);
+      animation: pulse-dot 1.8s ease-in-out infinite;
+    }
+
+    @keyframes pulse-dot {
+      0%,100% { opacity: 1; transform: scale(1); }
+      50%      { opacity: 0.7; transform: scale(1.3); }
+    }
+
+    .investor-name {
+      font-size: 22px; font-weight: 700; letter-spacing: 0.02em;
+      color: var(--text-primary); line-height: 1.1; margin-bottom: 6px;
+    }
+
+    .investor-program-tag {
+      font-size: 11px; color: var(--text-muted);
+      letter-spacing: 0.12em; text-transform: uppercase;
+    }
+
+    .investor-divider {
+      height: 1px;
+      background: linear-gradient(90deg, rgba(196,144,42,0.35), transparent);
+      margin: 14px 0;
+    }
+
+    .investor-details { display: flex; flex-direction: column; gap: 8px; }
+
+    .detail-row {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 12.5px;
+    }
+
+    .detail-key { color: var(--text-muted); letter-spacing: 0.08em; }
+    .detail-val { color: var(--text-primary); font-weight: 600; }
+
+    /* ─── No Match ──────────────────────────────────────────────────────── */
+    .no-match-card {
+      width: 100%; padding: 36px; text-align: center;
+      animation: cardIn 0.4s ease both;
+    }
+
+    .no-match-icon { font-size: 36px; margin-bottom: 14px; filter: grayscale(0.3); }
+
+    .no-match-title {
+      font-size: 18px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px;
+    }
+
+    .no-match-sub { font-size: 13px; color: var(--text-muted); line-height: 1.6; }
+
+    /* ─── Summary Chips ─────────────────────────────────────────────────── */
+    .scenario-summary { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+
+    .chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 100px; padding: 5px 14px;
+      font-size: 11.5px; color: var(--text-muted); letter-spacing: 0.06em;
+    }
+
+    .chip strong { color: var(--text-primary); font-weight: 600; }
+
+    /* ─── Ineligible Toggle & Panel ────────────────────────────────────── */
+    .ineligible-toggle {
+      display: inline-flex; align-items: center; gap: 9px;
+      margin-top: 22px; cursor: pointer;
+      background: none; border: none; padding: 0;
+      font-family: inherit;
+    }
+
+    .inelig-dot {
+      width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0;
+      background: #D94F4F;
+      box-shadow: 0 0 6px #D94F4F, 0 0 14px rgba(217,79,79,0.55);
+      animation: redPulse 2.2s ease-in-out infinite;
+    }
+
+    @keyframes redPulse {
+      0%,100% { box-shadow: 0 0 6px #D94F4F, 0 0 14px rgba(217,79,79,0.5); }
+      50%      { box-shadow: 0 0 10px #D94F4F, 0 0 24px rgba(217,79,79,0.7); }
+    }
+
+    .inelig-label {
+      font-size: 11.5px; letter-spacing: 0.10em; text-transform: uppercase;
+      color: rgba(217,79,79,0.85); font-weight: 600;
+      transition: color 0.2s;
+    }
+
+    .ineligible-toggle:hover .inelig-label { color: #E87070; }
+
+    .inelig-chevron {
+      font-size: 10px; color: rgba(217,79,79,0.65);
+      transition: transform 0.35s ease, color 0.2s;
+      display: inline-block;
+    }
+
+    .ineligible-toggle.open .inelig-chevron { transform: rotate(180deg); }
+
+    .ineligible-panel {
+      overflow: hidden;
+      max-height: 0; opacity: 0;
+      transition: max-height 0.42s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease;
+    }
+
+    .ineligible-panel.open {
+      max-height: 800px; opacity: 1;
+    }
+
+    .inelig-list {
+      display: flex; flex-direction: column; gap: 10px;
+      padding-top: 14px;
+    }
+
+    .inelig-card {
+      display: flex; align-items: center; gap: 14px;
+      background: rgba(217,79,79,0.06);
+      border: 1px solid rgba(217,79,79,0.18);
+      border-radius: var(--radius-sm);
+      padding: 13px 18px;
+      backdrop-filter: blur(12px);
+      animation: cardIn 0.35s ease both;
+    }
+
+    .inelig-name {
+      font-size: 14px; font-weight: 600; color: var(--text-primary);
+      flex: 1;
+    }
+
+    .inelig-reason {
+      font-size: 11.5px; font-weight: 500; letter-spacing: 0.04em;
+      color: #E07070;
+      background: rgba(217,79,79,0.12);
+      border: 1px solid rgba(217,79,79,0.22);
+      border-radius: 100px; padding: 4px 12px;
+      white-space: nowrap;
+    }
+
+    /* ─── Action Bar (Stack + Summary) ─────────────────────────────────── */
+    .action-bar {
+      display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap;
+    }
+
+    .btn-action {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 9px 20px; border-radius: 100px; cursor: pointer;
+      font-family: inherit; font-size: 12px; font-weight: 600;
+      letter-spacing: 0.10em; text-transform: uppercase;
+      transition: all 0.2s ease; border: 1px solid;
+    }
+
+    .btn-stack {
+      background: rgba(196,144,42,0.10);
+      border-color: rgba(196,144,42,0.35);
+      color: var(--text-gold);
+    }
+    .btn-stack:hover {
+      background: rgba(196,144,42,0.18);
+      border-color: rgba(232,184,75,0.55);
+    }
+    .btn-stack.maxed {
+      opacity: 0.4; cursor: not-allowed;
+    }
+
+    .btn-summary {
+      background: linear-gradient(135deg, rgba(196,144,42,0.20), rgba(232,184,75,0.12));
+      border-color: rgba(196,144,42,0.40);
+      color: var(--text-gold);
+    }
+    .btn-summary:hover {
+      background: linear-gradient(135deg, rgba(196,144,42,0.30), rgba(232,184,75,0.22));
+      border-color: rgba(232,184,75,0.60);
+      box-shadow: 0 0 18px rgba(196,144,42,0.18);
+    }
+
+    /* ─── Scenario Stacker ──────────────────────────────────────────────── */
+    .stacker-header { width: 100%; }
+
+    .stacker-title-row {
+      display: flex; align-items: center; justify-content: space-between;
+    }
+
+    .stacker-eyebrow {
+      font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase;
+      color: var(--text-gold); font-weight: 600;
+    }
+
+    .stacker-clear {
+      font-size: 11px; color: rgba(248,245,240,0.35);
+      background: none; border: none; cursor: pointer; font-family: inherit;
+      letter-spacing: 0.06em; transition: color 0.2s;
+    }
+    .stacker-clear:hover { color: rgba(248,245,240,0.70); }
+
+    .stacker-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 14px; margin-top: 16px;
+    }
+
+    .stacker-col {
+      background: rgba(255,255,255,0.035);
+      border: 1px solid rgba(196,144,42,0.18);
+      border-radius: var(--radius); padding: 20px 18px;
+      backdrop-filter: blur(18px);
+      animation: cardIn 0.35s ease both;
+    }
+
+    .stacker-col-num {
+      font-size: 9px; letter-spacing: 0.20em; text-transform: uppercase;
+      color: var(--text-muted); margin-bottom: 10px;
+    }
+
+    .stacker-chips {
+      display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 14px;
+    }
+
+    .stacker-chip {
+      font-size: 10px; padding: 3px 9px; border-radius: 100px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.10);
+      color: var(--text-muted);
+    }
+    .stacker-chip strong { color: var(--text-primary); }
+
+    .stacker-divider {
+      height: 1px;
+      background: linear-gradient(90deg, rgba(196,144,42,0.25), transparent);
+      margin-bottom: 12px;
+    }
+
+    .stacker-inv-row {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 12px; padding: 5px 0;
+    }
+
+    .stacker-dot {
+      width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+    }
+    .stacker-dot.elig  { background: #4ADE80; box-shadow: 0 0 6px rgba(74,222,128,0.7); }
+    .stacker-dot.inelig { background: #D94F4F; box-shadow: 0 0 6px rgba(217,79,79,0.7); }
+
+    .stacker-inv-name { color: var(--text-primary); flex: 1; font-weight: 500; }
+    .stacker-inv-ltv  { color: var(--text-muted); font-size: 11px; }
+
+    /* ─── Summary Modal ─────────────────────────────────────────────────── */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 100;
+      background: rgba(4,10,24,0.80);
+      backdrop-filter: blur(8px);
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+      animation: fadeIn 0.2s ease;
+    }
+
+    @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+
+    .modal-box {
+      width: 100%; max-width: 640px; max-height: 90vh; overflow-y: auto;
+      background: rgba(13,22,52,0.95);
+      border: 1px solid rgba(196,144,42,0.30);
+      border-radius: 20px; padding: 28px;
+      backdrop-filter: blur(30px);
+      box-shadow: 0 30px 80px rgba(0,0,0,0.6), 0 0 40px rgba(196,144,42,0.06);
+      animation: modalIn 0.3s cubic-bezier(0.22,1,0.36,1) both;
+    }
+
+    @keyframes modalIn {
+      from { opacity:0; transform: translateY(24px) scale(0.97); }
+      to   { opacity:1; transform: translateY(0) scale(1); }
+    }
+
+    .modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .modal-title {
+      font-size: 13px; letter-spacing: 0.16em; text-transform: uppercase;
+      color: var(--text-gold); font-weight: 600;
+    }
+
+    .modal-close {
+      background: none; border: none; color: var(--text-muted);
+      font-size: 16px; cursor: pointer; padding: 4px; line-height: 1;
+      transition: color 0.2s;
+    }
+    .modal-close:hover { color: var(--text-primary); }
+
+    /* ─── Summary Card (preview inside modal + print target) ────────────── */
+    .summary-card {
+      background: linear-gradient(150deg, #07112B 0%, #0E1B10 50%, #1C1712 100%);
+      border-radius: 14px; overflow: hidden;
+      border: 1px solid rgba(196,144,42,0.20);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      color: #F8F5F0;
+    }
+
+    .sc-top-bar {
+      height: 4px;
+      background: linear-gradient(90deg, #B8821E, #E8B84B, #B8821E);
+    }
+
+    .sc-header {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      padding: 20px 24px 16px;
+    }
+
+    .sc-logo-area { display: flex; align-items: center; gap: 12px; }
+
+    .sc-lhfs {
+      font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase;
+      color: #E8B84B; font-weight: 600; line-height: 1;
+    }
+
+    .sc-label {
+      font-size: 16px; font-weight: 700; color: #F8F5F0; margin-top: 3px;
+    }
+
+    .sc-date {
+      font-size: 11px; color: rgba(248,245,240,0.40);
+      letter-spacing: 0.06em; padding-top: 4px;
+    }
+
+    .sc-divider {
+      height: 1px; margin: 0 24px;
+      background: linear-gradient(90deg, rgba(196,144,42,0.40), transparent);
+    }
+
+    .sc-params {
+      display: flex; flex-wrap: wrap; gap: 7px;
+      padding: 14px 24px;
+    }
+
+    .sc-chip {
+      font-size: 10.5px; padding: 4px 12px; border-radius: 100px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: rgba(248,245,240,0.65);
+    }
+    .sc-chip strong { color: #F8F5F0; }
+
+    .sc-investors-label {
+      font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase;
+      color: rgba(232,184,75,0.70); padding: 14px 24px 8px; font-weight: 600;
+    }
+
+    .sc-investors { padding: 0 24px 4px; }
+
+    .sc-inv-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .sc-inv-row:last-child { border-bottom: none; }
+
+    .sc-inv-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: #4ADE80; box-shadow: 0 0 7px rgba(74,222,128,0.7); flex-shrink: 0;
+    }
+
+    .sc-inv-name { font-size: 13px; font-weight: 600; flex: 1; }
+
+    .sc-inv-stat {
+      font-size: 11px; color: rgba(248,245,240,0.50);
+    }
+    .sc-inv-stat strong { color: rgba(248,245,240,0.85); }
+
+    .sc-notes-section { padding: 0 24px; }
+
+    .sc-notes-label {
+      font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase;
+      color: rgba(232,184,75,0.70); padding: 14px 0 8px; font-weight: 600;
+    }
+
+    .sc-notes-display {
+      font-size: 12px; color: rgba(248,245,240,0.70); line-height: 1.65;
+      white-space: pre-wrap; padding-bottom: 16px;
+    }
+
+    .sc-footer {
+      font-size: 9.5px; color: rgba(248,245,240,0.28);
+      letter-spacing: 0.10em; text-align: center;
+      padding: 14px 24px; border-top: 1px solid rgba(255,255,255,0.05);
+    }
+
+    /* ─── Modal Notes Input ─────────────────────────────────────────────── */
+    .modal-notes-area { margin-top: 20px; }
+
+    .modal-notes-label {
+      display: block; font-size: 11px; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    .modal-notes-input {
+      width: 100%; min-height: 88px; resize: vertical;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(196,144,42,0.22);
+      border-radius: 10px; padding: 12px 14px;
+      font-family: inherit; font-size: 13px;
+      color: var(--text-primary); line-height: 1.6;
+      transition: border-color 0.2s;
+      outline: none;
+    }
+    .modal-notes-input:focus { border-color: rgba(196,144,42,0.55); }
+    .modal-notes-input::placeholder { color: rgba(248,245,240,0.22); }
+
+    /* ─── Modal Action Buttons ──────────────────────────────────────────── */
+    .modal-actions {
+      display: flex; gap: 12px; margin-top: 20px; justify-content: flex-end;
+    }
+
+    .modal-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 22px; border-radius: 100px; cursor: pointer;
+      font-family: inherit; font-size: 12px; font-weight: 600;
+      letter-spacing: 0.10em; text-transform: uppercase;
+      transition: all 0.2s ease; border: 1px solid;
+    }
+
+    .modal-btn-secondary {
+      background: rgba(255,255,255,0.05);
+      border-color: rgba(255,255,255,0.14);
+      color: var(--text-muted);
+    }
+    .modal-btn-secondary:hover {
+      background: rgba(255,255,255,0.09);
+      color: var(--text-primary);
+    }
+
+    .modal-btn-primary {
+      background: linear-gradient(135deg, #B8821E, #E8B84B);
+      border-color: transparent; color: #07112B;
+    }
+    .modal-btn-primary:hover {
+      box-shadow: 0 0 22px rgba(232,184,75,0.35);
+      filter: brightness(1.08);
+    }
+
+    /* ─── Print: show only the card ────────────────────────────────────── */
+    .print-only { display: none; }
+
+    @media print {
+      body > * { display: none !important; }
+      .print-only {
+        display: block !important;
+        position: fixed; inset: 0;
+        background: #fff;
+      }
+      #printCardClone .summary-card {
+        border-radius: 0; border: none;
+        min-height: 100vh;
+      }
+    }
+
+    /* ─── Footer ────────────────────────────────────────────────────────── */
+    .footer {
+      margin-top: 60px; text-align: center;
+      font-size: 11px; color: rgba(248,245,240,0.25);
+      letter-spacing: 0.1em; line-height: 1.8;
+    }
+
+    /* ─── Widget Shell ───────────────────────────────────────────────────── */
+    .widget {
+      background: rgba(255,255,255,0.032);
+      backdrop-filter: blur(28px); -webkit-backdrop-filter: blur(28px);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow:
+        0 0 0 1px var(--breath-border, rgba(196,144,42,0.28)),
+        0 0 var(--breath-glow, 0px) rgba(196,144,42,0.12),
+        0 0 var(--breath-halo, 0px) rgba(196,144,42,0.05),
+        0 28px 70px rgba(0,0,0,0.55),
+        inset 0 1px 0 rgba(255,255,255,0.07);
+    }
+
+    .widget-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px 12px;
+      border-bottom: 1px solid rgba(196,144,42,0.14);
+    }
+
+    .widget-title {
+      font-size: 9.5px; letter-spacing: 0.28em; text-transform: uppercase;
+      color: var(--text-gold); font-weight: 700;
+    }
+
+    .live-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
+      color: rgba(74,222,128,0.80); font-weight: 600;
+    }
+
+    .live-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: #4ADE80;
+      box-shadow: 0 0 6px rgba(74,222,128,0.9);
+      animation: pulseGlow 2s ease-in-out infinite;
+    }
+
+    /* ─── Treasury Widget ────────────────────────────────────────────────── */
+    .treasury-body { padding: 16px 20px 18px; cursor: pointer; }
+
+    .treasury-rate-row {
+      display: flex; align-items: baseline; gap: 10px; margin-bottom: 4px;
+    }
+
+    .treasury-rate {
+      font-size: 30px; font-weight: 700; letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #F8F5F0, #E8B84B);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .treasury-change {
+      font-size: 12px; font-weight: 600; padding: 2px 8px;
+      border-radius: 100px;
+    }
+    .treasury-change.up   { color: #EF6666; background: rgba(239,102,102,0.14); }
+    .treasury-change.down { color: #4ADE80; background: rgba(74,222,128,0.14); }
+
+    .treasury-label {
+      font-size: 10px; color: var(--text-muted);
+      letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 14px;
+    }
+
+    .treasury-chart-wrap {
+      position: relative; width: 100%; height: 72px;
+    }
+
+    #treasuryChart { width: 100%; height: 100%; }
+
+    .treasury-dates {
+      display: flex; justify-content: space-between;
+      margin-top: 6px;
+      font-size: 9px; color: rgba(248,245,240,0.28);
+      letter-spacing: 0.06em;
+    }
+
+    .treasury-expand {
+      overflow: hidden;
+      max-height: 0; opacity: 0;
+      transition: max-height 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease;
+      border-top: 1px solid rgba(196,144,42,0.10);
+    }
+    .treasury-expand.open { max-height: 400px; opacity: 1; }
+
+    .treasury-article {
+      padding: 14px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .treasury-article:last-child { border-bottom: none; }
+
+    .ta-source {
+      font-size: 8.5px; letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--text-gold); margin-bottom: 5px; font-weight: 600;
+    }
+
+    .ta-headline {
+      font-size: 12px; font-weight: 600; color: var(--text-primary);
+      line-height: 1.4; margin-bottom: 4px;
+    }
+
+    .ta-synopsis {
+      font-size: 11px; color: var(--text-muted); line-height: 1.55;
+    }
+
+    /* ─── Signals Widget ─────────────────────────────────────────────────── */
+    .signals-body { padding: 0; }
+
+    .signal-item {
+      padding: 14px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.045);
+      cursor: pointer;
+      transition: background 0.2s;
+      position: relative;
+    }
+    .signal-item:last-child { border-bottom: none; }
+    .signal-item:hover { background: rgba(255,255,255,0.03); }
+
+    .signal-top {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 5px;
+    }
+
+    .signal-source {
+      font-size: 8px; letter-spacing: 0.16em; text-transform: uppercase;
+      font-weight: 700; padding: 2px 8px; border-radius: 100px;
+    }
+
+    .signal-time {
+      font-size: 9.5px; color: rgba(248,245,240,0.30); margin-left: auto;
+    }
+
+    .signal-headline {
+      font-size: 12px; font-weight: 600; color: var(--text-primary);
+      line-height: 1.40; margin-bottom: 4px;
+    }
+
+    .signal-synopsis {
+      font-size: 11px; color: var(--text-muted);
+      line-height: 1.5; display: none;
+    }
+
+    .signal-item.expanded .signal-synopsis { display: block; }
+
+    .signal-arrow {
+      font-size: 9px; color: rgba(248,245,240,0.25);
+      position: absolute; right: 20px; top: 16px;
+      transition: transform 0.25s;
+    }
+    .signal-item.expanded .signal-arrow { transform: rotate(90deg); }
+
+    /* ─── Results full-width row ─────────────────────────────────────────── */
+    .results-row {
+      width: 100%; max-width: 1260px;
+    }
+
+    /* ─── Responsive ────────────────────────────────────────────────────── */
+    @media (max-width: 900px) {
+      .page { padding: 24px 16px 60px; }
+      .dashboard-grid { grid-template-columns: 1fr; gap: 14px; }
+      .dashboard-right { flex-direction: row; flex-wrap: wrap; gap: 14px; }
+      .dashboard-right .widget { flex: 1; min-width: 280px; }
+      .header { margin-bottom: 24px; }
+    }
+    @media (max-width: 600px) {
+      .page { padding: 18px 12px 50px; }
+      .form-card { padding: 24px 18px 28px; }
+      .dashboard-right { flex-direction: column; }
+      .dashboard-right .widget { min-width: unset; width: 100%; }
+      .results-grid { grid-template-columns: 1fr; }
+      /* Pill buttons full width on mobile */
+      .pill-group { gap: 6px; }
+      .pill-btn { flex: 1; text-align: center; padding: 10px 8px; font-size: 12px; }
+      /* Transaction row — stack select + panel vertically */
+      .transaction-row { flex-direction: column; gap: 8px; }
+      .refi-panel { width: 100% !important; opacity: 1 !important;
+        transform: none !important; border-left: none !important;
+        border-top: 1px solid rgba(196,144,42,0.18); padding: 10px 0 0 !important;
+        display: none; }
+      .refi-panel.visible { display: flex; }
+      .refi-panel-inner { flex-direction: row; flex-wrap: wrap; gap: 8px; padding: 0; }
+      .refi-btn { flex: 1; justify-content: center; }
+      /* DSCR panel same treatment */
+      #dscrPanel.visible { display: flex; }
+      /* Logo smaller */
+      .logo-main { font-size: 20px; }
+      .logo-icon { width: 40px; height: 40px; }
+      /* Header title less spacing */
+      .header-title { letter-spacing: 0.18em; font-size: 11px; }
+      /* Results chips wrap tighter */
+      .scenario-summary { gap: 5px; }
+      .chip { font-size: 10.5px; padding: 4px 10px; }
+      /* Investor cards */
+      .investor-name { font-size: 18px; }
+      /* Action bar stack */
+      .action-bar { flex-direction: column; }
+      .btn-action { justify-content: center; }
+      /* Modal full screen */
+      .modal-box { padding: 20px 16px; max-height: 95vh; }
+      /* Treasury widget */
+      .treasury-rate { font-size: 24px; }
+      /* Stacker chips wrap */
+      .stacker-chips { gap: 4px; }
+      .stacker-chip { font-size: 9.5px; padding: 2px 7px; }
+      /* Signal items */
+      .signal-headline { font-size: 11.5px; }
+      .signal-source { font-size: 7.5px; }
+    }
+    @media (max-width: 380px) {
+      .form-card { padding: 20px 14px 24px; }
+      .pill-btn { font-size: 11px; padding: 9px 6px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- ── Header ── -->
+  <header class="header">
+    <div class="logo-row">
+      <div class="logo-icon">
+        <svg viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="26" cy="26" r="24" fill="rgba(196,144,42,0.08)" />
+          <path d="M26 10L8 24h5v16h9V30h8v10h9V24h5L26 10z" fill="url(#goldGrad)" opacity="0.92"/>
+          <rect x="22" y="30" width="8" height="10" rx="1" fill="rgba(7,17,43,0.7)" />
+          <path d="M26 10L8 24h5v2L26 12l13 14h5v-2L26 10z" fill="rgba(255,255,255,0.15)" />
+          <defs>
+            <linearGradient id="goldGrad" x1="8" y1="10" x2="44" y2="40" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#E8B84B"/>
+              <stop offset="100%" stop-color="#9A6B18"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <div class="logo-text">
+        <span class="logo-main">Land Home</span>
+        <span class="logo-sub">Financial Services, Inc.</span>
+      </div>
+    </div>
+    <div class="header-divider"></div>
+    <div class="header-title">Investor Match Engine</div>
+  </header>
+
+  <!-- ── Dashboard Grid ── -->
+  <div class="dashboard-grid">
+  <div class="dashboard-left">
+
+  <!-- ── Form Card ── -->
+  <div class="glass-card form-card">
+
+    <!-- Program + DSCR sub-panel -->
+    <div class="form-label-group">
+      <label class="field-label">Loan Program</label>
+      <span class="field-hint" id="programHint">Select the applicable non-QM program type</span>
+      <div class="transaction-row">
+        <div class="select-wrap">
+          <select id="program" onchange="onProgramChange()">
+            <option value="">— Select Program —</option>
+            <option value="DSCR">DSCR</option>
+            <option value="ITIN">ITIN</option>
+            <option value="Bank Statement">Bank Statement</option>
+          </select>
+        </div>
+        <!-- DSCR ratio sub-panel -->
+        <div class="refi-panel" id="dscrPanel">
+          <div class="refi-panel-inner">
+            <div class="refi-label">DSCR Ratio</div>
+            <button class="refi-btn" id="btnDscrGte" onclick="selectDSCR('>=1.00')">
+              <svg class="refi-icon" viewBox="0 0 16 16" fill="none">
+                <path d="M3 10l3-6 3 6M5 8.5h4M11 6h2M11 9.5h2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+              </svg>
+              ≥ 1.00
+            </button>
+            <button class="refi-btn" id="btnDscrLt" onclick="selectDSCR('<1.00')">
+              <svg class="refi-icon" viewBox="0 0 16 16" fill="none">
+                <path d="M3 10l3-6 3 6M5 8.5h4M13 6l-2 1.75L13 9.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              &lt; 1.00
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Transaction Type + Refi Sub-panel -->
+    <div class="form-label-group">
+      <label class="field-label">Transaction Type</label>
+      <span class="field-hint" id="txHint">Select purchase or refinance</span>
+      <div class="transaction-row">
+        <!-- Main select -->
+        <div class="select-wrap">
+          <select id="transaction" onchange="onTransactionChange()">
+            <option value="">— Select Type —</option>
+            <option value="Purchase">Purchase</option>
+            <option value="Refinance">Refinance</option>
+          </select>
+        </div>
+        <!-- Refi sub-panel slides in from right -->
+        <div class="refi-panel" id="refiPanel">
+          <div class="refi-panel-inner">
+            <div class="refi-label">Refinance Type</div>
+            <button class="refi-btn" id="btnCashOut" onclick="selectRefi('Cash Out')">
+              <svg class="refi-icon" viewBox="0 0 16 16" fill="none">
+                <circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.2"/>
+                <path d="M8 5v6M5.5 7l2.5-2.5L10.5 7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Cash Out
+            </button>
+            <button class="refi-btn" id="btnRateTerm" onclick="selectRefi('Rate & Term')">
+              <svg class="refi-icon" viewBox="0 0 16 16" fill="none">
+                <path d="M3 8h10M9 5l3 3-3 3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Rate &amp; Term
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Occupancy -->
+    <div class="form-label-group">
+      <label class="field-label">Occupancy</label>
+      <span class="field-hint">Select the property occupancy type</span>
+      <div class="pill-group">
+        <button class="pill-btn" id="occPrimary"    onclick="selectOccupancy('Primary')">Primary</button>
+        <button class="pill-btn" id="occSecondary"  onclick="selectOccupancy('Secondary')">Secondary</button>
+        <button class="pill-btn" id="occInvestment" onclick="selectOccupancy('Investment')">Investment</button>
+      </div>
+    </div>
+
+    <!-- LTV -->
+    <div class="form-label-group">
+      <label class="field-label" for="ltv">Loan to Value</label>
+      <span class="field-hint">Select the maximum LTV for this scenario</span>
+      <div class="select-wrap">
+        <select id="ltv" onchange="autoMatch()">
+          <option value="">— Select LTV —</option>
+          <option value="60">&lt;60%</option>
+          <option value="65">&lt;65%</option>
+          <option value="70">&lt;70%</option>
+          <option value="75">&lt;75%</option>
+          <option value="80">&lt;80%</option>
+          <option value="85">&lt;85%</option>
+          <option value="90">&lt;90%</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- FICO -->
+    <div class="form-label-group" style="margin-bottom:36px;">
+      <label class="field-label" for="fico">FICO Score</label>
+      <span class="field-hint">Select the borrower's credit score range</span>
+      <div class="select-wrap">
+        <select id="fico" onchange="autoMatch()">
+          <option value="">— Select FICO Range —</option>
+          <option value="600">600–619</option>
+          <option value="620">620–639</option>
+          <option value="640">640–659</option>
+          <option value="660">660–679</option>
+          <option value="680">680–699</option>
+          <option value="700">700–719</option>
+          <option value="720">720–739</option>
+          <option value="740">740–759</option>
+          <option value="760">760–779</option>
+          <option value="780">780–799</option>
+          <option value="800">800+</option>
+        </select>
+      </div>
+    </div>
+
+    <button class="btn-find" onclick="findInvestors()">Find Eligible Investors</button>
+  </div>
+  </div><!-- /dashboard-left -->
+
+  <!-- ── Right Column ── -->
+  <div class="dashboard-right">
+
+    <!-- Treasury Widget -->
+    <div class="widget" id="treasuryWidget">
+      <div class="widget-header">
+        <span class="widget-title">10-Year Treasury</span>
+        <span class="live-badge"><span class="live-dot"></span>Live</span>
+      </div>
+      <div class="treasury-body" onclick="toggleTreasuryExpand()">
+        <div class="treasury-rate-row">
+          <span class="treasury-rate" id="tRate">4.31%</span>
+          <span class="treasury-change up" id="tChange">+0.02</span>
+        </div>
+        <div class="treasury-label">U.S. 10-Year Treasury Yield &nbsp;·&nbsp; Click to expand</div>
+        <div class="treasury-chart-wrap">
+          <svg id="treasuryChart" viewBox="0 0 320 72" preserveAspectRatio="none"></svg>
+        </div>
+        <div class="treasury-dates" id="tDates"></div>
+      </div>
+      <div class="treasury-expand" id="treasuryExpand">
+        <div class="treasury-article">
+          <div class="ta-source">Federal Reserve · Rate Watch</div>
+          <div class="ta-headline">Fed Signals Patient Approach as Inflation Data Remains Mixed</div>
+          <div class="ta-synopsis">FOMC minutes reveal officials are seeking additional months of disinflation data before reducing the federal funds rate. Markets have repriced rate-cut expectations to two cuts in 2026, pushing the 10-year yield modestly higher.</div>
+        </div>
+        <div class="treasury-article">
+          <div class="ta-source">HousingWire · Mortgage Markets</div>
+          <div class="ta-headline">Treasury Auction Demand Stays Solid; Yield Curve Steepens Slightly</div>
+          <div class="ta-synopsis">This week's 10-year note auction drew a bid-to-cover ratio of 2.52x, indicating healthy investor appetite. The spread between the 2-year and 10-year has widened to +28bps — a modest steepening that typically signals improving economic optimism.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Signals Widget -->
+    <div class="widget">
+      <div class="widget-header">
+        <span class="widget-title">Signals</span>
+        <span class="live-badge"><span class="live-dot"></span>Industry Feed</span>
+      </div>
+      <div class="signals-body" id="signalsFeed"></div>
+    </div>
+
+  </div><!-- /dashboard-right -->
+  </div><!-- /dashboard-grid -->
+
+  <!-- Results Divider -->
+  <div class="results-row">
+  <div class="section-divider" id="resultsDivider" style="display:none;">
+    <div class="divider-line"></div>
+    <span>Eligible Investors</span>
+    <div class="divider-line"></div>
+  </div>
+
+  <!-- Results -->
+  <div id="results"></div>
+
+  <!-- Scenario Stacker Panel -->
+  <div id="stackerPanel" style="display:none; width:100%; margin-top:36px;">
+    <div class="stacker-header">
+      <div class="stacker-title-row">
+        <span class="stacker-eyebrow">Scenario Compare</span>
+        <button class="stacker-clear" onclick="clearStacker()">✕ Clear All</button>
+      </div>
+      <div class="divider-line" style="margin-top:10px; opacity:0.3;"></div>
+    </div>
+    <div id="stackerGrid" class="stacker-grid"></div>
+  </div>
+
+  <!-- Summary Modal -->
+  <div id="summaryModal" class="modal-overlay" style="display:none;" onclick="closeSummaryModal(event)">
+    <div class="modal-box">
+      <div class="modal-header">
+        <span class="modal-title">Scenario Summary Card</span>
+        <button class="modal-close" onclick="document.getElementById('summaryModal').style.display='none'">✕</button>
+      </div>
+
+      <!-- Card Preview -->
+      <div class="summary-card" id="summaryCard">
+        <div class="sc-top-bar"></div>
+        <div class="sc-header">
+          <div class="sc-logo-area">
+            <svg width="28" height="28" viewBox="0 0 52 52" fill="none"><circle cx="26" cy="26" r="24" fill="rgba(196,144,42,0.1)"/><path d="M26 10L8 24h5v16h9V30h8v10h9V24h5L26 10z" fill="url(#scGold)" opacity=".92"/><rect x="22" y="30" width="8" height="10" rx="1" fill="rgba(7,17,43,0.7)"/><defs><linearGradient id="scGold" x1="8" y1="10" x2="44" y2="40" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#E8B84B"/><stop offset="100%" stop-color="#9A6B18"/></linearGradient></defs></svg>
+            <div>
+              <div class="sc-lhfs">Land Home Financial Services</div>
+              <div class="sc-label">Investor Match Summary</div>
+            </div>
+          </div>
+          <div class="sc-date" id="scDate"></div>
+        </div>
+        <div class="sc-divider"></div>
+        <div class="sc-params" id="scParams"></div>
+        <div class="sc-divider"></div>
+        <div class="sc-investors-label">ELIGIBLE INVESTORS</div>
+        <div id="scInvestors" class="sc-investors"></div>
+        <div id="scNotesSection" class="sc-notes-section" style="display:none;">
+          <div class="sc-divider"></div>
+          <div class="sc-notes-label">PROCESSOR NOTES</div>
+          <div id="scNotesDisplay" class="sc-notes-display"></div>
+        </div>
+        <div class="sc-footer">Internal Use Only &nbsp;·&nbsp; Land Home Financial Services, Inc. &nbsp;·&nbsp; NMLS #1796</div>
+      </div>
+
+      <!-- Notes Input -->
+      <div class="modal-notes-area">
+        <label class="modal-notes-label">Processor Notes <span style="opacity:.5;">(optional)</span></label>
+        <textarea id="processorNotes" class="modal-notes-input" placeholder="Add file notes, conditions, or instructions for the processor…" oninput="updateNotesPreview()"></textarea>
+      </div>
+
+      <!-- Actions -->
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-secondary" onclick="printSummaryCard()">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M4 1h8a1 1 0 011 1v3H3V2a1 1 0 011-1zM2 6h12a1 1 0 011 1v5a1 1 0 01-1 1h-2v-3H4v3H2a1 1 0 01-1-1V7a1 1 0 011-1zm3 7h6v-3H5v3z"/></svg>
+          Save as PDF
+        </button>
+        <button class="modal-btn modal-btn-primary" onclick="saveCardAsImage()">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M.5 9.9a.5.5 0 01.5.5v2.5a1 1 0 001 1h12a1 1 0 001-1v-2.5a.5.5 0 011 0v2.5a2 2 0 01-2 2H2a2 2 0 01-2-2v-2.5a.5.5 0 01.5-.5z"/><path d="M7.646 11.854a.5.5 0 00.708 0l3-3a.5.5 0 00-.708-.708L8.5 10.293V1.5a.5.5 0 00-1 0v8.793L5.354 8.146a.5.5 0 10-.708.708l3 3z"/></svg>
+          Save as Image
+        </button>
+      </div>
+    </div>
+  </div>
+
+  </div><!-- /results-row -->
+
+  <!-- Hidden print frame for card PDF -->
+  <div id="printFrame" class="print-only">
+    <div id="printCardClone"></div>
+  </div>
+
+  <footer class="footer">
+    Land Home Financial Services, Inc. &nbsp;·&nbsp; NMLS# 1796<br>
+    Internal use only — not for distribution
+  </footer>
+
+</div>
+
+<script>
+  // ── State ──────────────────────────────────────────────────────────────────
+  let selectedRefi      = '';   // 'Cash Out' | 'Rate & Term' | ''
+  let selectedOccupancy = '';   // 'Primary' | 'Secondary' | 'Investment' | ''
+  let selectedDSCR      = '';   // '>=1.00' | '<1.00' | ''
+
+  // ── Program Handler (DSCR sub-panel) ──────────────────────────────────────
+  function onProgramChange() {
+    const val   = document.getElementById('program').value;
+    const panel = document.getElementById('dscrPanel');
+    const hint  = document.getElementById('programHint');
+
+    if (val === 'DSCR') {
+      panel.classList.add('visible');
+      hint.textContent = 'Select DSCR ratio →';
+    } else {
+      panel.classList.remove('visible');
+      selectedDSCR = '';
+      document.getElementById('btnDscrGte').classList.remove('active');
+      document.getElementById('btnDscrLt').classList.remove('active');
+      hint.textContent = 'Select the applicable non-QM program type';
+    }
+    autoMatch();
+  }
+
+  function selectDSCR(type) {
+    selectedDSCR = type;
+    document.getElementById('btnDscrGte').classList.toggle('active', type === '>=1.00');
+    document.getElementById('btnDscrLt').classList.toggle('active',  type === '<1.00');
+    autoMatch();
+  }
+
+  // ── Transaction Type Handler ───────────────────────────────────────────────
+  function onTransactionChange() {
+    const val   = document.getElementById('transaction').value;
+    const panel = document.getElementById('refiPanel');
+    const hint  = document.getElementById('txHint');
+
+    if (val === 'Refinance') {
+      panel.classList.add('visible');
+      hint.textContent = 'Select refinance type →';
+    } else {
+      panel.classList.remove('visible');
+      selectedRefi = '';
+      document.getElementById('btnCashOut').classList.remove('active');
+      document.getElementById('btnRateTerm').classList.remove('active');
+      hint.textContent = 'Select purchase or refinance';
+    }
+    autoMatch();
+  }
+
+  function selectRefi(type) {
+    selectedRefi = type;
+    document.getElementById('btnCashOut').classList.toggle('active', type === 'Cash Out');
+    document.getElementById('btnRateTerm').classList.toggle('active', type === 'Rate & Term');
+    autoMatch();
+  }
+
+  // ── Occupancy Handler ──────────────────────────────────────────────────────
+  function selectOccupancy(type) {
+    selectedOccupancy = type;
+    ['Primary','Secondary','Investment'].forEach(t => {
+      document.getElementById('occ' + t).classList.toggle('active', t === type);
+    });
+    autoMatch();
+  }
+
+  // ── Auto Match ─────────────────────────────────────────────────────────────
+  function autoMatch() {
+    const program  = document.getElementById('program').value;
+    const tx       = document.getElementById('transaction').value;
+    const ltv      = document.getElementById('ltv').value;
+    const fico     = document.getElementById('fico').value;
+    const refiOk   = tx !== 'Refinance' || selectedRefi !== '';
+    const dscrOk   = program !== 'DSCR'  || selectedDSCR !== '';
+
+    if (program && tx && selectedOccupancy && ltv && fico && refiOk && dscrOk) {
+      findInvestors();
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  //  INVESTOR ELIGIBILITY MATRIX
+  //
+  //  Two investor types:
+  //
+  //  A) Detailed matrix investors (e.g. Luxury):
+  //     matrix[effectiveTx][occupancy][ficoMin] = maxLTV
+  //     effectiveTx = 'Purchase' | 'Rate & Term' | 'Cash Out'
+  //     Lookup: find the highest ficoMin key ≤ scenario fico,
+  //             return that row's maxLTV. If no key found → ineligible.
+  //
+  //  B) Simple investors (placeholder until their matrix is loaded):
+  //     programs, transactions[], occupancy[], maxLTV, minFICO
+  // ─────────────────────────────────────────────────────────────────────────
+
+  const INVESTOR_MATRIX = [
+
+    // ── LUXURY ───────────────────────────────────────────────────────────────
+    // Sources: Luxury.jpg (Bank Statement), Luxury ITIN.png, Luxury DSCR.png
+    {
+      id:       "luxury",
+      name:     "Luxury",
+      programs: ["Bank Statement", "ITIN", "DSCR"],
+
+      programMatrices: {
+
+        // Bank Statement ──────────────────────────────────────────────────────
+        "Bank Statement": {
+          "Purchase": {
+            "Primary":    { 720:85, 700:85, 680:80, 660:75, 640:70, 620:70 },
+            "Secondary":  { 720:75, 700:75, 680:75, 660:70, 640:70 },
+            "Investment": { 720:65, 700:65, 680:65, 660:65 },
+          },
+          "Rate & Term": {
+            "Primary":    { 720:85, 700:85, 680:80, 660:75, 640:70, 620:70 },
+            "Secondary":  { 720:75, 700:75, 680:75, 660:70, 640:70 },
+            "Investment": { 720:65, 700:65, 680:65, 660:65 },
+          },
+          "Cash Out": {
+            "Primary":    { 720:75, 700:75, 680:70, 660:65, 640:65 },
+            "Secondary":  { 720:75, 700:75, 680:75 },
+            "Investment": { 720:65, 700:65, 680:65 },
+          },
+        },
+
+        // ITIN ────────────────────────────────────────────────────────────────
+        "ITIN": {
+          "Purchase": {
+            "Primary":    { 700:80, 660:75 },
+            "Secondary":  { 700:75, 660:70 },
+            "Investment": { 700:70, 660:65 },
+          },
+          "Rate & Term": {
+            "Primary":    { 700:80, 660:75 },
+            "Secondary":  { 700:75, 660:70 },
+            "Investment": { 700:70, 660:65 },
+          },
+          "Cash Out": {
+            "Primary":    { 700:75, 660:70 },
+            "Secondary":  { 700:70, 660:65 },
+            "Investment": { 700:65, 660:60 },
+          },
+        },
+
+        // DSCR — Investment Property only, split by ratio ─────────────────────
+        "DSCR": {
+          ">=1.00": {
+            "Purchase":    { "Investment": { 700:80, 680:80, 660:75, 640:70, 620:65 } },
+            "Rate & Term": { "Investment": { 700:80, 680:80, 660:75, 640:70, 620:65 } },
+            "Cash Out":    { "Investment": { 700:75, 680:75, 660:70, 620:65 } },
+          },
+          "<1.00": {
+            "Purchase":    { "Investment": { 700:75, 680:75, 660:70 } },
+            "Rate & Term": { "Investment": { 700:75, 680:75, 660:70 } },
+            "Cash Out":    { "Investment": { 700:65, 680:65, 660:60 } },
+          },
+        },
+
+      },
+    },
+
+    // ── FIRST NATIONAL ───────────────────────────────────────────────────────
+    // Sources: FN ITIN.png (ITIN matrix), FN BS.png (Bank Statement, Near Miss $75K–$1.5M tier)
+    // DSCR: not offered by First National
+    {
+      id:       "first-national",
+      name:     "First National",
+      programs: ["ITIN", "Bank Statement"],
+
+      programMatrices: {
+
+        // ITIN — Primary & Secondary only (Investment N/A) ───────────────────
+        "ITIN": {
+          "Purchase": {
+            "Primary":   { 700:85, 680:80 },
+            "Secondary": { 700:85, 680:80 },
+          },
+          "Rate & Term": {
+            "Primary":   { 700:85, 680:80 },
+            "Secondary": { 700:85, 680:80 },
+          },
+          "Cash Out": {
+            "Primary":   { 700:80, 680:80 },
+            "Secondary": { 700:80, 680:80 },
+          },
+        },
+
+        // Bank Statement — source: FN BS.png (Near Miss, $75K–$1.5M tier)
+        // Secondary Cash Out not offered. Investment not offered.
+        "Bank Statement": {
+          "Purchase": {
+            "Primary":   { 700:85, 680:85, 660:80, 640:80 },
+            "Secondary": { 700:80, 680:75, 660:75, 640:70 },
+          },
+          "Rate & Term": {
+            "Primary":   { 700:85, 680:85, 660:80, 640:80 },
+            "Secondary": { 700:80, 680:75, 660:75, 640:70 },
+          },
+          "Cash Out": {
+            "Primary":   { 700:80, 680:80, 660:75, 640:75 },
+          },
+        },
+
+      },
+    },
+
+    // ── ACRA LENDING ─────────────────────────────────────────────────────────
+    // Sources: acra bs.png (Primary BS), Acra BS 2nd home.png (Secondary BS),
+    //          Acra ITIN Mods.png (ITIN modifier), Acra DSCR matrix.jpg
+    // Note: Loan amount tiers exist — matrices below reflect ≤$1,500,000 tier
+    //       (most permissive). DSCR does not split by ≥/<1.00 ratio at Acra.
+    {
+      id:       "acra",
+      name:     "Acra Lending",
+      programs: ["Bank Statement", "ITIN", "DSCR"],
+
+      programMatrices: {
+
+        // Bank Statement — Primary & Secondary only (no Investment) ───────────
+        // Source: acra bs.png (Primary), Acra BS 2nd home.png (Secondary)
+        // ≤$1,500,000 tier only. 4 columns in sheet = P/RT LTV | P/RT CLTV | CO LTV | CO CLTV
+        // CLTV columns ignored. Purchase and Rate & Term share the same LTV column.
+        "Bank Statement": {
+          "Purchase": {
+            "Primary":   { 760:85, 740:85, 720:85, 700:80, 680:80, 660:75, 640:70, 620:65 },
+            "Secondary": { 760:80, 740:80, 720:80, 700:75, 680:75, 660:70, 640:65, 620:60 },
+          },
+          "Rate & Term": {
+            "Primary":   { 760:85, 740:85, 720:85, 700:80, 680:80, 660:75, 640:70, 620:65 },
+            "Secondary": { 760:80, 740:80, 720:80, 700:75, 680:75, 660:70, 640:65, 620:60 },
+          },
+          "Cash Out": {
+            "Primary":   { 760:80, 740:80, 720:80, 700:75, 680:70, 660:65, 640:60 },
+            "Secondary": { 760:75, 740:75, 720:75, 700:70, 680:70, 660:65, 640:60 },
+          },
+        },
+
+        // ITIN — derived from Acra ITIN Modifier (Acra ITIN Mods.png)
+        // Cap: Max $1.0M loan, Min FICO 640
+        // Purchase and Refi (R&T + Cash-Out) have separate LTV ceilings
+        // Applies to Primary & Secondary (same caps for both per modifier doc)
+        "ITIN": {
+          "Purchase": {
+            "Primary":   { 700:75, 660:70, 640:65 },
+            "Secondary": { 700:75, 660:70, 640:65 },
+          },
+          "Rate & Term": {
+            "Primary":   { 700:70, 660:65, 640:60 },
+            "Secondary": { 700:70, 660:65, 640:60 },
+          },
+          "Cash Out": {
+            "Primary":   { 700:70, 660:65, 640:60 },
+            "Secondary": { 700:70, 660:65, 640:60 },
+          },
+        },
+
+        // DSCR — Investment Property only (Acra DSCR matrix.jpg)
+        // Acra does NOT split by ≥1.00 / <1.00 — same matrix for both ratio types
+        // FICO floor 600 is the minimum offered
+        "DSCR": {
+          ">=1.00": {
+            "Purchase":    { "Investment": { 780:85, 760:85, 740:85, 720:85, 700:80, 680:80, 660:80, 640:75, 620:65, 600:60 } },
+            "Rate & Term": { "Investment": { 780:80, 760:80, 740:80, 720:80, 700:75, 680:75, 660:75, 640:70, 620:65, 600:60 } },
+            "Cash Out":    { "Investment": { 780:75, 760:75, 740:75, 720:75, 700:75, 680:75, 660:75, 640:70, 620:65, 600:60 } },
+          },
+          "<1.00": {
+            "Purchase":    { "Investment": { 780:85, 760:85, 740:85, 720:85, 700:80, 680:80, 660:80, 640:75, 620:65, 600:60 } },
+            "Rate & Term": { "Investment": { 780:80, 760:80, 740:80, 720:80, 700:75, 680:75, 660:75, 640:70, 620:65, 600:60 } },
+            "Cash Out":    { "Investment": { 780:75, 760:75, 740:75, 720:75, 700:75, 680:75, 660:75, 640:70, 620:65, 600:60 } },
+          },
+        },
+
+      },
+    },
+
+    // ── NR ───────────────────────────────────────────────────────────────────
+    // Sources: NR BS.png, NR DSCR.png
+    // Note: BS matrix uses loan-amount-tiered structure; values below reflect ≤$1.5M tier.
+    //       Purchase gets its own 720→90% ceiling; R/T does not.
+    {
+      id:       "newrez",
+      name:     "NewRez",
+      programs: ["Bank Statement", "DSCR"],
+
+      programMatrices: {
+
+        // Bank Statement — Primary (NR BS.png) & Secondary (NR 2nd Home.jpg), ≤$1.5M ──
+        // Primary Purchase gets 720→90% ceiling not shared by R/T.
+        // Secondary Cash Out: 1 unit only per sheet.
+        "Bank Statement": {
+          "Purchase": {
+            "Primary":   { 720:90, 700:85, 640:80 },
+            "Secondary": { 720:80, 680:75, 640:70 },
+          },
+          "Rate & Term": {
+            "Primary":   { 700:85, 640:80 },
+            "Secondary": { 720:80, 680:75, 640:70 },
+          },
+          "Cash Out": {
+            "Primary":   { 720:80, 700:80, 680:75, 640:70 },
+            "Secondary": { 740:80, 720:80, 700:75, 660:70 },
+          },
+        },
+
+        // DSCR — Investment only, split by ratio (≤$1.5M tier) ───────────────
+        // Note: First-Time Investor min FICO 680. Cash Out max 70% (per footnote).
+        "DSCR": {
+          ">=1.00": {
+            "Purchase":    { "Investment": { 720:80, 700:80, 680:75, 640:70 } },
+            "Rate & Term": { "Investment": { 720:80, 700:80, 680:75, 640:70 } },
+            "Cash Out":    { "Investment": { 720:75, 700:75, 680:70, 640:65 } },
+          },
+          "<1.00": {
+            "Purchase":    { "Investment": { 720:75, 700:70, 680:65 } },
+            "Rate & Term": { "Investment": { 720:75, 700:70, 680:65 } },
+            "Cash Out":    { "Investment": { 720:70, 700:65, 680:60 } },
+          },
+        },
+
+      },
+    },
+
+    // ── DEEPHAVEN ─────────────────────────────────────────────────────────────
+    // Sources: DH BS.png, DH ITIN.png, DH DSCR.png
+    // Note: BS uses "Alternative Doc" column (= Bank Statement product); ≤$1.5M tier.
+    //       720→90% on P/RT Primary requires extra reserves (** footnote).
+    //       "Second Home & Investment" share the same LTV column in DH BS & ITIN.
+    {
+      id:       "deephaven",
+      name:     "Deephaven",
+      programs: ["Bank Statement", "ITIN", "DSCR"],
+
+      programMatrices: {
+
+        // Bank Statement — Alt Doc column (DH BS.png, ≤$1.5M) ─────────────────
+        "Bank Statement": {
+          "Purchase": {
+            "Primary":    { 720:90, 680:85, 660:80 },
+            "Secondary":  { 720:85, 680:80, 660:75 },
+            "Investment": { 720:85, 680:80, 660:75 },
+          },
+          "Rate & Term": {
+            "Primary":    { 720:90, 680:85, 660:80 },
+            "Secondary":  { 720:85, 680:80, 660:75 },
+            "Investment": { 720:85, 680:80, 660:75 },
+          },
+          "Cash Out": {
+            "Primary":    { 720:80, 680:80, 660:75 },
+            "Secondary":  { 720:80, 680:75, 660:70 },
+            "Investment": { 720:80, 680:75, 660:70 },
+          },
+        },
+
+        // ITIN — DH ITIN.png (≤$1.5M) ─────────────────────────────────────────
+        // Secondary and Investment share same limits per DH "Second Homes & Investment" column.
+        // Cash Out not available for Secondary/Investment (N/A in sheet).
+        "ITIN": {
+          "Purchase": {
+            "Primary":    { 720:80, 700:80, 680:75 },
+            "Secondary":  { 720:70, 700:70 },
+            "Investment": { 720:70, 700:70 },
+          },
+          "Rate & Term": {
+            "Primary":    { 720:80, 700:80, 680:75 },
+            "Secondary":  { 720:70, 700:70 },
+            "Investment": { 720:70, 700:70 },
+          },
+          "Cash Out": {
+            "Primary":    { 720:65, 700:60 },
+            "Secondary":  { 720:65 },
+            "Investment": { 720:65 },
+          },
+        },
+
+        // DSCR — Investment only, split by ratio (DH DSCR.png, ≤$1.5M) ────────
+        "DSCR": {
+          ">=1.00": {
+            "Purchase":    { "Investment": { 720:80, 700:80, 680:75, 640:70 } },
+            "Rate & Term": { "Investment": { 720:80, 700:80, 680:75, 640:70 } },
+            "Cash Out":    { "Investment": { 720:80, 700:75, 680:75, 640:70 } },
+          },
+          "<1.00": {
+            "Purchase":    { "Investment": { 720:75, 700:70, 680:70 } },
+            "Rate & Term": { "Investment": { 720:75, 700:70, 680:70 } },
+            "Cash Out":    { "Investment": { 720:70, 700:65, 680:60 } },
+          },
+        },
+
+      },
+    },
+
+  ];
+
+  // ── Label Maps ─────────────────────────────────────────────────────────────
+  const LTV_LABELS = {
+    60:"<60%", 65:"<65%", 70:"<70%", 75:"<75%",
+    80:"<80%", 85:"<85%", 90:"<90%"
+  };
+
+  const FICO_LABELS = {
+    600:"600–619", 620:"620–639", 640:"640–659", 660:"660–679",
+    680:"680–699", 700:"700–719", 720:"720–739", 740:"740–759",
+    760:"760–779", 780:"780–799", 800:"800+",
+  };
+
+  // ── Grid lookup helper ─────────────────────────────────────────────────────
+  function gridLookup(grid, fico, ltv) {
+    const tiers  = Object.keys(grid).map(Number).sort((a, b) => b - a);
+    const tier   = tiers.find(k => k <= fico);
+    if (tier === undefined) return null;
+    const maxLTV = grid[tier];
+    if (ltv > maxLTV) return null;
+    const minFICO = tiers[tiers.length - 1]; // lowest tier in this grid = true floor
+    return { maxLTV, minFICO };
+  }
+
+  // ── Eligibility Engine ─────────────────────────────────────────────────────
+  function checkEligibility(inv, { program, effectiveTx, occupancy, ltv, fico, dscrType }) {
+    if (!inv.programs.includes(program)) return null;
+
+    // Top-level placeholder (Angel Oak)
+    if (inv._placeholder) {
+      if (!inv.transactions.includes(effectiveTx)) return null;
+      if (!inv.occupancy.includes(occupancy))       return null;
+      if (ltv  > inv.maxLTV)                        return null;
+      if (fico < inv.minFICO)                        return null;
+      return { maxLTV: inv.maxLTV, minFICO: inv.minFICO };
+    }
+
+    const progMatrix = inv.programMatrices?.[program];
+    if (!progMatrix) return null;
+
+    // Program-level placeholder (FN DSCR / Bank Statement)
+    if (progMatrix._placeholder) {
+      if (!progMatrix.transactions.includes(effectiveTx)) return null;
+      if (!progMatrix.occupancy.includes(occupancy))       return null;
+      if (ltv  > progMatrix.maxLTV)  return null;
+      if (fico < progMatrix.minFICO) return null;
+      return { maxLTV: progMatrix.maxLTV, minFICO: progMatrix.minFICO };
+    }
+
+    // DSCR: extra dscrType dimension
+    if (program === 'DSCR') {
+      if (!dscrType) return null;
+      const dscrGrid = progMatrix[dscrType]?.[effectiveTx]?.[occupancy];
+      if (!dscrGrid) return null;
+      return gridLookup(dscrGrid, fico, ltv);
+    }
+
+    // Standard programs
+    const grid = progMatrix[effectiveTx]?.[occupancy];
+    if (!grid) return null;
+    return gridLookup(grid, fico, ltv);
+  }
+
+  // ── Ineligibility Diagnosis ────────────────────────────────────────────────
+  function diagnoseFail(grid, fico, ltv) {
+    const tiers = Object.keys(grid).map(Number).sort((a, b) => b - a);
+    const minTier = tiers[tiers.length - 1];
+    if (fico < minTier) return `FICO below minimum (${FICO_LABELS[minTier] || minTier})`;
+    const tier = tiers.find(k => k <= fico);
+    return `LTV too high — max ${grid[tier]}% at this FICO`;
+  }
+
+  function whyIneligible(inv, { program, effectiveTx, occupancy, ltv, fico, dscrType }) {
+    if (!inv.programs.includes(program)) return `${program} not offered`;
+
+    const progMatrix = inv.programMatrices?.[program];
+    if (!progMatrix) return `${program} not configured`;
+
+    if (progMatrix._placeholder) {
+      if (!progMatrix.transactions.includes(effectiveTx)) return `${effectiveTx} not available`;
+      if (!progMatrix.occupancy.includes(occupancy))      return `${occupancy} not available`;
+      if (fico < progMatrix.minFICO) return `FICO below minimum (${FICO_LABELS[progMatrix.minFICO] || progMatrix.minFICO})`;
+      return `LTV too high — max ${progMatrix.maxLTV}%`;
+    }
+
+    if (program === 'DSCR') {
+      const dscrGrid = progMatrix[dscrType]?.[effectiveTx]?.[occupancy];
+      if (!dscrGrid) return `${occupancy} · ${effectiveTx} not available`;
+      return diagnoseFail(dscrGrid, fico, ltv);
+    }
+
+    const grid = progMatrix[effectiveTx]?.[occupancy];
+    if (!grid) return `${occupancy} · ${effectiveTx} not available`;
+    return diagnoseFail(grid, fico, ltv);
+  }
+
+  // ── Core Match ─────────────────────────────────────────────────────────────
+  function findInvestors() {
+    const program = document.getElementById('program').value;
+    const tx      = document.getElementById('transaction').value;
+    const ltv     = parseInt(document.getElementById('ltv').value, 10);
+    const fico    = parseInt(document.getElementById('fico').value, 10);
+    const occ     = selectedOccupancy;
+
+    const resultsEl = document.getElementById('results');
+    const dividerEl = document.getElementById('resultsDivider');
+
+    const refiMissing = tx === 'Refinance' && !selectedRefi;
+    const dscrMissing = program === 'DSCR'  && !selectedDSCR;
+    if (!program || !tx || !occ || isNaN(ltv) || isNaN(fico) || refiMissing || dscrMissing) {
+      shakeForm();
+      return;
+    }
+
+    const effectiveTx  = tx === 'Refinance' ? selectedRefi : tx;
+    const txLabel      = tx === 'Refinance' ? `Refi – ${selectedRefi}` : tx;
+    const programLabel = program === 'DSCR' ? `DSCR ${selectedDSCR}` : program;
+
+    const scenario = { program, effectiveTx, occupancy: occ, ltv, fico, dscrType: selectedDSCR };
+
+    const evaluated = INVESTOR_MATRIX.map(inv => ({
+      inv,
+      result: checkEligibility(inv, scenario),
+    }));
+    const matches    = evaluated.filter(({ result }) => result !== null);
+    const ineligible = evaluated.filter(({ result }) => result === null);
+
+    dividerEl.style.display = 'flex';
+    resultsEl.innerHTML = '';
+
+    if (matches.length === 0) {
+      resultsEl.innerHTML = `
+        <div class="glass-card no-match-card">
+          <div class="no-match-icon">⚠️</div>
+          <div class="no-match-title">No Eligible Investors Found</div>
+          <div class="no-match-sub">
+            No investors currently match a <strong>${programLabel}</strong> /
+            <strong>${txLabel}</strong> / <strong>${occ}</strong> scenario
+            at <strong>${LTV_LABELS[ltv]}</strong> LTV with a FICO of
+            <strong>${FICO_LABELS[fico]}</strong>.<br>
+            Consider adjusting the scenario or confirming program eligibility.
+          </div>
+        </div>`;
+      setTimeout(() => dividerEl.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+      return;
+    }
+
+    const summary = document.createElement('div');
+    summary.className = 'scenario-summary';
+    summary.innerHTML = `
+      <span class="chip">Program <strong>${programLabel}</strong></span>
+      <span class="chip">Tx <strong>${txLabel}</strong></span>
+      <span class="chip">Occupancy <strong>${occ}</strong></span>
+      <span class="chip">LTV <strong>${LTV_LABELS[ltv]}</strong></span>
+      <span class="chip">FICO <strong>${FICO_LABELS[fico]}</strong></span>
+      <span class="chip"><strong>${matches.length}</strong> Match${matches.length > 1 ? 'es' : ''}</span>
+    `;
+    resultsEl.appendChild(summary);
+
+    const grid = document.createElement('div');
+    grid.className = 'results-grid';
+
+    matches.forEach(({ inv, result }) => {
+      const card = document.createElement('div');
+      card.className = 'glass-card investor-card';
+      card.innerHTML = `
+        <div class="investor-badge"><span class="badge-dot"></span>Eligible</div>
+        <div class="investor-name">${inv.name}</div>
+        <div class="investor-program-tag">${programLabel} · ${txLabel}</div>
+        <div class="investor-divider"></div>
+        <div class="investor-details">
+          <div class="detail-row">
+            <span class="detail-key">Max LTV</span>
+            <span class="detail-val">${LTV_LABELS[result.maxLTV] || result.maxLTV + '%'}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-key">Min FICO</span>
+            <span class="detail-val">${FICO_LABELS[result.minFICO] || result.minFICO}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-key">Occupancy</span>
+            <span class="detail-val">${occ}</span>
+          </div>
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+
+    resultsEl.appendChild(grid);
+
+    // ── Ineligible section ──────────────────────────────────────────────────
+    if (ineligible.length > 0) {
+      const toggleBtn = document.createElement('button');
+      toggleBtn.className = 'ineligible-toggle';
+      toggleBtn.innerHTML = `
+        <span class="inelig-dot"></span>
+        <span class="inelig-label">${ineligible.length} Ineligible Investor${ineligible.length > 1 ? 's' : ''}</span>
+        <span class="inelig-chevron">▼</span>
+      `;
+
+      const panel = document.createElement('div');
+      panel.className = 'ineligible-panel';
+
+      const list = document.createElement('div');
+      list.className = 'inelig-list';
+
+      ineligible.forEach(({ inv }, i) => {
+        const reason = whyIneligible(inv, scenario);
+        const item = document.createElement('div');
+        item.className = 'inelig-card';
+        item.style.animationDelay = `${i * 0.05}s`;
+        item.innerHTML = `
+          <span class="inelig-name">${inv.name}</span>
+          <span class="inelig-reason">${reason}</span>
+        `;
+        list.appendChild(item);
+      });
+
+      panel.appendChild(list);
+
+      toggleBtn.addEventListener('click', () => {
+        const isOpen = panel.classList.toggle('open');
+        toggleBtn.classList.toggle('open', isOpen);
+      });
+
+      resultsEl.appendChild(toggleBtn);
+      resultsEl.appendChild(panel);
+    }
+
+    // ── Action bar ─────────────────────────────────────────────────────────
+    const bar = document.createElement('div');
+    bar.className = 'action-bar';
+
+    const stackBtn = document.createElement('button');
+    const isMaxed  = stackedScenarios.length >= 3;
+    stackBtn.className = `btn-action btn-stack${isMaxed ? ' maxed' : ''}`;
+    stackBtn.title = isMaxed ? 'Maximum 3 scenarios' : 'Add to side-by-side compare';
+    stackBtn.innerHTML = `<svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M1 2.5A1.5 1.5 0 012.5 1h3A1.5 1.5 0 017 2.5v3A1.5 1.5 0 015.5 7h-3A1.5 1.5 0 011 5.5v-3zm8 0A1.5 1.5 0 0110.5 1h3A1.5 1.5 0 0115 2.5v3A1.5 1.5 0 0113.5 7h-3A1.5 1.5 0 019 5.5v-3zm-8 8A1.5 1.5 0 012.5 9h3A1.5 1.5 0 017 10.5v3A1.5 1.5 0 015.5 15h-3A1.5 1.5 0 011 13.5v-3zm8 0A1.5 1.5 0 0110.5 9h3A1.5 1.5 0 0115 10.5v3A1.5 1.5 0 0113.5 15h-3A1.5 1.5 0 019 13.5v-3z"/></svg>
+      ${isMaxed ? 'Compare Full (3/3)' : `Stack Scenario (${stackedScenarios.length}/3)`}`;
+    if (!isMaxed) {
+      stackBtn.addEventListener('click', () => {
+        stackScenario(scenario, matches, programLabel, txLabel);
+        stackBtn.classList.add('maxed');
+        stackBtn.textContent = `✓ Added (${stackedScenarios.length}/3)`;
+        stackBtn.disabled = true;
+      });
+    }
+
+    const summaryBtn = document.createElement('button');
+    summaryBtn.className = 'btn-action btn-summary';
+    summaryBtn.innerHTML = `<svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M4 1.5H3a2 2 0 00-2 2V14a2 2 0 002 2h10a2 2 0 002-2V3.5a2 2 0 00-2-2h-1v1h1a1 1 0 011 1V14a1 1 0 01-1 1H3a1 1 0 01-1-1V3.5a1 1 0 011-1h1v-1z"/><path d="M9.5 1a.5.5 0 01.5.5v1a.5.5 0 01-.5.5h-3a.5.5 0 01-.5-.5v-1a.5.5 0 01.5-.5h3z"/></svg>
+      Generate Summary`;
+    summaryBtn.addEventListener('click', () => openSummaryModal(scenario, matches, programLabel, txLabel));
+
+    bar.appendChild(stackBtn);
+    bar.appendChild(summaryBtn);
+    resultsEl.appendChild(bar);
+
+    setTimeout(() => dividerEl.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+  }
+
+  // ── Scenario Stacker ───────────────────────────────────────────────────────
+  const stackedScenarios = [];
+
+  function stackScenario(scenario, matches, programLabel, txLabel) {
+    if (stackedScenarios.length >= 3) return;
+    stackedScenarios.push({ scenario, matches, programLabel, txLabel });
+    renderStackPanel();
+  }
+
+  function clearStacker() {
+    stackedScenarios.length = 0;
+    document.getElementById('stackerPanel').style.display = 'none';
+  }
+
+  function renderStackPanel() {
+    const panel = document.getElementById('stackerPanel');
+    const grid  = document.getElementById('stackerGrid');
+    panel.style.display = 'block';
+    grid.innerHTML = '';
+
+    stackedScenarios.forEach(({ scenario, matches, programLabel, txLabel }, idx) => {
+      const { occupancy, ltv, fico } = scenario;
+      const ineligs = INVESTOR_MATRIX.filter(inv => !matches.find(m => m.inv.id === inv.id));
+
+      const col = document.createElement('div');
+      col.className = 'stacker-col';
+      col.style.animationDelay = `${idx * 0.06}s`;
+
+      const chips = [
+        `<span class="stacker-chip"><strong>${programLabel}</strong></span>`,
+        `<span class="stacker-chip"><strong>${txLabel}</strong></span>`,
+        `<span class="stacker-chip"><strong>${occupancy}</strong></span>`,
+        `<span class="stacker-chip">LTV <strong>${LTV_LABELS[ltv]}</strong></span>`,
+        `<span class="stacker-chip">FICO <strong>${FICO_LABELS[fico]}</strong></span>`,
+      ].join('');
+
+      const eligRows = matches.map(({ inv, result }) => `
+        <div class="stacker-inv-row">
+          <span class="stacker-dot elig"></span>
+          <span class="stacker-inv-name">${inv.name}</span>
+          <span class="stacker-inv-ltv">≤${result.maxLTV}%</span>
+        </div>`).join('');
+
+      const ineligRows = ineligs.map(inv => `
+        <div class="stacker-inv-row">
+          <span class="stacker-dot inelig"></span>
+          <span class="stacker-inv-name" style="opacity:.5;">${inv.name}</span>
+        </div>`).join('');
+
+      col.innerHTML = `
+        <div class="stacker-col-num">Scenario ${idx + 1}</div>
+        <div class="stacker-chips">${chips}</div>
+        <div class="stacker-divider"></div>
+        ${eligRows}${ineligRows}
+      `;
+      grid.appendChild(col);
+    });
+  }
+
+  // ── Summary Card / Modal ────────────────────────────────────────────────────
+  let _activeSummaryData = null;
+
+  function openSummaryModal(scenario, matches, programLabel, txLabel) {
+    _activeSummaryData = { scenario, matches, programLabel, txLabel };
+    const { occupancy, ltv, fico } = scenario;
+
+    document.getElementById('scDate').textContent = new Date().toLocaleDateString('en-US', {
+      month: 'short', day: 'numeric', year: 'numeric'
+    });
+
+    document.getElementById('scParams').innerHTML = [
+      `<span class="sc-chip"><strong>${programLabel}</strong></span>`,
+      `<span class="sc-chip"><strong>${txLabel}</strong></span>`,
+      `<span class="sc-chip"><strong>${occupancy}</strong></span>`,
+      `<span class="sc-chip">LTV <strong>${LTV_LABELS[ltv]}</strong></span>`,
+      `<span class="sc-chip">FICO <strong>${FICO_LABELS[fico]}</strong></span>`,
+    ].join('');
+
+    document.getElementById('scInvestors').innerHTML = matches.map(({ inv, result }) => `
+      <div class="sc-inv-row">
+        <span class="sc-inv-dot"></span>
+        <span class="sc-inv-name">${inv.name}</span>
+        <span class="sc-inv-stat">Max LTV <strong>${result.maxLTV}%</strong></span>
+        <span class="sc-inv-stat" style="margin-left:12px;">Min FICO <strong>${FICO_LABELS[result.minFICO] || result.minFICO}</strong></span>
+      </div>`).join('');
+
+    document.getElementById('processorNotes').value = '';
+    document.getElementById('scNotesSection').style.display = 'none';
+
+    const modal = document.getElementById('summaryModal');
+    modal.style.display = 'flex';
+  }
+
+  function closeSummaryModal(e) {
+    if (e.target === document.getElementById('summaryModal'))
+      document.getElementById('summaryModal').style.display = 'none';
+  }
+
+  function updateNotesPreview() {
+    const notes = document.getElementById('processorNotes').value.trim();
+    const section = document.getElementById('scNotesSection');
+    const display = document.getElementById('scNotesDisplay');
+    if (notes) {
+      display.textContent = notes;
+      section.style.display = 'block';
+    } else {
+      section.style.display = 'none';
+    }
+  }
+
+  function printSummaryCard() {
+    const clone = document.getElementById('summaryCard').cloneNode(true);
+    document.getElementById('printCardClone').innerHTML = '';
+    document.getElementById('printCardClone').appendChild(clone);
+    window.print();
+  }
+
+  function saveCardAsImage() {
+    if (!_activeSummaryData) return;
+    const { scenario, matches, programLabel, txLabel } = _activeSummaryData;
+    const { occupancy, ltv, fico } = scenario;
+    const notes = document.getElementById('processorNotes').value.trim();
+
+    const W = 800, PX = 2;
+    const rows = matches.length;
+    const notesLines = notes ? notes.split('\n') : [];
+    const H = 300 + rows * 38 + (notes ? 60 + notesLines.length * 18 : 0);
+
+    const canvas = document.createElement('canvas');
+    canvas.width  = W * PX;
+    canvas.height = H * PX;
+    const c = canvas.getContext('2d');
+    c.scale(PX, PX);
+
+    // Background gradient
+    const bg = c.createLinearGradient(0, 0, W, H);
+    bg.addColorStop(0,   '#07112B');
+    bg.addColorStop(0.5, '#0E1B10');
+    bg.addColorStop(1,   '#1C1712');
+    c.fillStyle = bg;
+    roundRect(c, 0, 0, W, H, 14);
+    c.fill();
+
+    // Top gold bar
+    const bar = c.createLinearGradient(0, 0, W, 0);
+    bar.addColorStop(0,   '#B8821E');
+    bar.addColorStop(0.5, '#E8B84B');
+    bar.addColorStop(1,   '#B8821E');
+    c.fillStyle = bar;
+    c.fillRect(0, 0, W, 4);
+
+    // House icon (simplified)
+    c.save();
+    c.translate(36, 22);
+    const houseGrad = c.createLinearGradient(0, 0, 28, 28);
+    houseGrad.addColorStop(0, '#E8B84B');
+    houseGrad.addColorStop(1, '#9A6B18');
+    c.fillStyle = houseGrad;
+    c.globalAlpha = 0.92;
+    c.beginPath();
+    c.moveTo(14, 2); c.lineTo(1, 11); c.lineTo(4, 11);
+    c.lineTo(4, 22); c.lineTo(9, 22); c.lineTo(9, 15);
+    c.lineTo(19, 15); c.lineTo(19, 22); c.lineTo(24, 22);
+    c.lineTo(24, 11); c.lineTo(27, 11); c.closePath();
+    c.fill();
+    c.globalAlpha = 1;
+    c.restore();
+
+    // LHFS eyebrow
+    c.fillStyle = '#E8B84B';
+    c.font = `600 9px 'Segoe UI', sans-serif`;
+    c.letterSpacing = '2px';
+    c.fillText('LAND HOME FINANCIAL SERVICES', 74, 36);
+
+    // Title
+    c.fillStyle = '#F8F5F0';
+    c.font = `700 17px 'Segoe UI', sans-serif`;
+    c.fillText('Investor Match Summary', 74, 56);
+
+    // Date
+    const dateStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    c.fillStyle = 'rgba(248,245,240,0.38)';
+    c.font = `11px 'Segoe UI', sans-serif`;
+    c.textAlign = 'right';
+    c.fillText(dateStr, W - 30, 42);
+    c.textAlign = 'left';
+
+    // Divider 1
+    goldLine(c, W, 76);
+
+    // Scenario chips
+    let cx = 30;
+    const chipData = [programLabel, txLabel, occupancy, `LTV ${LTV_LABELS[ltv]}`, `FICO ${FICO_LABELS[fico]}`];
+    c.font = `600 10px 'Segoe UI', sans-serif`;
+    chipData.forEach(text => {
+      const tw = c.measureText(text).width;
+      const cw = tw + 22;
+      c.fillStyle = 'rgba(255,255,255,0.07)';
+      roundRect(c, cx, 86, cw, 22, 11); c.fill();
+      c.strokeStyle = 'rgba(255,255,255,0.12)';
+      c.lineWidth = 0.7;
+      roundRect(c, cx, 86, cw, 22, 11); c.stroke();
+      c.fillStyle = 'rgba(248,245,240,0.80)';
+      c.fillText(text, cx + 11, 101);
+      cx += cw + 8;
+    });
+
+    // Divider 2
+    goldLine(c, W, 120);
+
+    // Investors label
+    c.fillStyle = 'rgba(232,184,75,0.65)';
+    c.font = `600 8.5px 'Segoe UI', sans-serif`;
+    c.fillText('ELIGIBLE INVESTORS', 30, 140);
+
+    // Investor rows
+    matches.forEach(({ inv, result }, i) => {
+      const y = 160 + i * 38;
+      // Subtle row bg
+      c.fillStyle = 'rgba(255,255,255,0.025)';
+      roundRect(c, 22, y - 13, W - 44, 30, 6); c.fill();
+      // Green dot
+      c.fillStyle = '#4ADE80';
+      c.shadowColor = 'rgba(74,222,128,0.7)'; c.shadowBlur = 6;
+      c.beginPath(); c.arc(38, y + 2, 4, 0, Math.PI * 2); c.fill();
+      c.shadowBlur = 0;
+      // Name
+      c.fillStyle = '#F8F5F0';
+      c.font = `600 13px 'Segoe UI', sans-serif`;
+      c.fillText(inv.name, 54, y + 6);
+      // Stats
+      c.fillStyle = 'rgba(248,245,240,0.45)';
+      c.font = `11px 'Segoe UI', sans-serif`;
+      const statText = `Max LTV ${result.maxLTV}%   ·   Min FICO ${FICO_LABELS[result.minFICO] || result.minFICO}`;
+      c.textAlign = 'right';
+      c.fillText(statText, W - 30, y + 6);
+      c.textAlign = 'left';
+    });
+
+    const afterInv = 160 + rows * 38;
+
+    // Notes section
+    if (notes) {
+      goldLine(c, W, afterInv + 4);
+      c.fillStyle = 'rgba(232,184,75,0.65)';
+      c.font = `600 8.5px 'Segoe UI', sans-serif`;
+      c.fillText('PROCESSOR NOTES', 30, afterInv + 24);
+      c.fillStyle = 'rgba(248,245,240,0.65)';
+      c.font = `12px 'Segoe UI', sans-serif`;
+      notesLines.forEach((line, i) => {
+        c.fillText(line, 30, afterInv + 44 + i * 18);
+      });
+    }
+
+    // Footer
+    const footerY = H - 14;
+    c.fillStyle = 'rgba(255,255,255,0.06)';
+    c.fillRect(0, footerY - 20, W, 1);
+    c.fillStyle = 'rgba(248,245,240,0.25)';
+    c.font = `9px 'Segoe UI', sans-serif`;
+    c.textAlign = 'center';
+    c.fillText('Internal Use Only  ·  Land Home Financial Services, Inc.  ·  NMLS #1796', W / 2, footerY);
+    c.textAlign = 'left';
+
+    // Download
+    const link = document.createElement('a');
+    link.download = `LHFS-Scenario-${Date.now()}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  }
+
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y); ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r); ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h); ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r); ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+  }
+
+  function goldLine(ctx, W, y) {
+    const g = ctx.createLinearGradient(0, 0, W * 0.7, 0);
+    g.addColorStop(0,   'rgba(196,144,42,0.45)');
+    g.addColorStop(1,   'rgba(196,144,42,0)');
+    ctx.strokeStyle = g;
+    ctx.lineWidth = 0.8;
+    ctx.beginPath(); ctx.moveTo(22, y); ctx.lineTo(W - 22, y); ctx.stroke();
+  }
+
+  // ── Shake on incomplete submit ─────────────────────────────────────────────
+  function shakeForm() {
+    const card = document.querySelector('.form-card');
+    card.style.animation = 'none';
+    card.offsetHeight;
+    card.style.animation = 'shake 0.4s ease';
+  }
+
+  document.addEventListener('keydown', e => { if (e.key === 'Enter') findInvestors(); });
+
+  // Inject shake keyframes
+  const _s = document.createElement('style');
+  _s.textContent = `
+    @keyframes shake {
+      0%,100%{ transform: translateX(0); }
+      20%    { transform: translateX(-6px); }
+      40%    { transform: translateX(6px); }
+      60%    { transform: translateX(-4px); }
+      80%    { transform: translateX(4px); }
+    }
+  `;
+  document.head.appendChild(_s);
+
+  // ── Page Breathing Engine ──────────────────────────────────────────────────
+  // Single sine wave drives all glow borders in perfect unison via CSS vars.
+  // Period: 5s full breath cycle. No CSS animation — no reset artifacts.
+  (function breathe() {
+    const root   = document.documentElement;
+    const PERIOD = 5000; // ms per full inhale+exhale
+    const start  = performance.now();
+
+    function tick(now) {
+      // t goes 0→1 continuously; sin maps it to a smooth −1→1→−1 wave
+      const t   = ((now - start) % PERIOD) / PERIOD;
+      const raw = (Math.sin(t * Math.PI * 2 - Math.PI / 2) + 1) / 2; // 0→1→0
+      // Ease the wave slightly toward the center so dim/bright aren't extreme
+      const v   = 0.15 + raw * 0.85;
+
+      const borderA = (0.18 + v * 0.66).toFixed(3);   // 0.18 → 0.84
+      const glowPx  = (v * 26).toFixed(1);             // 0   → 26px
+      const haloPx  = (v * 53).toFixed(1);             // 0   → 53px
+
+      root.style.setProperty('--breath-border', `rgba(196,144,42,${borderA})`);
+      root.style.setProperty('--breath-glow',   `${glowPx}px`);
+      root.style.setProperty('--breath-halo',   `${haloPx}px`);
+
+      requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  })();
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // TREASURY CHART
+  // ══════════════════════════════════════════════════════════════════════════
+  const TREASURY_DATA = [
+    { date: 'Mar 25', v: 4.32 },
+    { date: 'Mar 26', v: 4.35 },
+    { date: 'Mar 27', v: 4.28 },
+    { date: 'Mar 28', v: 4.41 },
+    { date: 'Mar 31', v: 4.38 },
+    { date: 'Apr 1',  v: 4.29 },
+    { date: 'Apr 2',  v: 4.31 },
+  ];
+
+  (function buildTreasuryChart() {
+    const W = 320, H = 72, PAD = { t:8, r:8, b:8, l:8 };
+    const vals  = TREASURY_DATA.map(d => d.v);
+    const min   = Math.min(...vals) - 0.04;
+    const max   = Math.max(...vals) + 0.04;
+    const toX   = i => PAD.l + i * (W - PAD.l - PAD.r) / (TREASURY_DATA.length - 1);
+    const toY   = v => PAD.t + (1 - (v - min) / (max - min)) * (H - PAD.t - PAD.b);
+    const SVG_NS = 'http://www.w3.org/2000/svg';
+    const svg = document.getElementById('treasuryChart');
+
+    // Gradient defs
+    const defs = document.createElementNS(SVG_NS, 'defs');
+    defs.innerHTML = `
+      <linearGradient id="lineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%"   stop-color="#9A6B18" stop-opacity="0.7"/>
+        <stop offset="60%"  stop-color="#E8B84B" stop-opacity="0.9"/>
+        <stop offset="100%" stop-color="#E8B84B"/>
+      </linearGradient>
+      <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%"   stop-color="#E8B84B" stop-opacity="0.18"/>
+        <stop offset="100%" stop-color="#E8B84B" stop-opacity="0"/>
+      </linearGradient>
+      <filter id="lineGlow">
+        <feGaussianBlur stdDeviation="1.8" result="blur"/>
+        <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+    `;
+    svg.appendChild(defs);
+
+    // Build smooth bezier path
+    const pts = TREASURY_DATA.map((d, i) => ({ x: toX(i), y: toY(d.v) }));
+    let d = `M ${pts[0].x} ${pts[0].y}`;
+    for (let i = 0; i < pts.length - 1; i++) {
+      const cpX = (pts[i].x + pts[i+1].x) / 2;
+      d += ` C ${cpX} ${pts[i].y} ${cpX} ${pts[i+1].y} ${pts[i+1].x} ${pts[i+1].y}`;
+    }
+
+    // Area fill
+    const last = pts[pts.length - 1];
+    const area = document.createElementNS(SVG_NS, 'path');
+    area.setAttribute('d', d + ` L ${last.x} ${H} L ${pts[0].x} ${H} Z`);
+    area.setAttribute('fill', 'url(#areaGrad)');
+    svg.appendChild(area);
+
+    // Line
+    const line = document.createElementNS(SVG_NS, 'path');
+    line.setAttribute('d', d);
+    line.setAttribute('fill', 'none');
+    line.setAttribute('stroke', 'url(#lineGrad)');
+    line.setAttribute('stroke-width', '1.8');
+    line.setAttribute('filter', 'url(#lineGlow)');
+    svg.appendChild(line);
+
+    // Animated live dot at last point
+    const dotGroup = document.createElementNS(SVG_NS, 'g');
+
+    const pulse = document.createElementNS(SVG_NS, 'circle');
+    pulse.setAttribute('cx', last.x); pulse.setAttribute('cy', last.y);
+    pulse.setAttribute('r', '4'); pulse.setAttribute('fill', 'rgba(232,184,75,0.30)');
+
+    const animR = document.createElementNS(SVG_NS, 'animate');
+    animR.setAttribute('attributeName', 'r');
+    animR.setAttribute('values', '3;8;3');
+    animR.setAttribute('dur', '2.4s');
+    animR.setAttribute('repeatCount', 'indefinite');
+    pulse.appendChild(animR);
+
+    const animO = document.createElementNS(SVG_NS, 'animate');
+    animO.setAttribute('attributeName', 'opacity');
+    animO.setAttribute('values', '0.7;0;0.7');
+    animO.setAttribute('dur', '2.4s');
+    animO.setAttribute('repeatCount', 'indefinite');
+    pulse.appendChild(animO);
+
+    const dot = document.createElementNS(SVG_NS, 'circle');
+    dot.setAttribute('cx', last.x); dot.setAttribute('cy', last.y);
+    dot.setAttribute('r', '3'); dot.setAttribute('fill', '#E8B84B');
+    dot.setAttribute('filter', 'url(#lineGlow)');
+
+    dotGroup.appendChild(pulse); dotGroup.appendChild(dot);
+    svg.appendChild(dotGroup);
+
+    // Date labels
+    const datesEl = document.getElementById('tDates');
+    datesEl.textContent = '';
+    [TREASURY_DATA[0], TREASURY_DATA[Math.floor(TREASURY_DATA.length/2)], TREASURY_DATA[TREASURY_DATA.length-1]]
+      .forEach(d => {
+        const s = document.createElement('span');
+        s.textContent = d.date;
+        datesEl.appendChild(s);
+      });
+
+    // Change indicator
+    const prev = TREASURY_DATA[TREASURY_DATA.length - 2].v;
+    const curr = TREASURY_DATA[TREASURY_DATA.length - 1].v;
+    const diff = (curr - prev).toFixed(2);
+    const changeEl = document.getElementById('tChange');
+    changeEl.textContent = (diff >= 0 ? '+' : '') + diff;
+    changeEl.className = 'treasury-change ' + (diff >= 0 ? 'up' : 'down');
+  })();
+
+  function toggleTreasuryExpand() {
+    document.getElementById('treasuryExpand').classList.toggle('open');
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // SIGNALS FEED
+  // ══════════════════════════════════════════════════════════════════════════
+  const SIGNALS = [
+    {
+      source: 'HousingWire', color: '#3B8BEB',
+      url: 'https://www.housingwire.com',
+      headline: 'Non-QM Lending Volume Climbs 18% as Bank Pullback Continues',
+      synopsis: 'Alternative documentation loans are seeing significant growth amid continued bank pullback from jumbo and non-agency lending. Private capital is absorbing the gap, with non-QM originators reporting record pipeline volume heading into Q2.',
+      time: '1h ago',
+    },
+    {
+      source: 'Mortgage Bankers Assoc.', color: '#E8B84B',
+      url: 'https://www.mba.org',
+      headline: 'Purchase Applications Rise 3.1% Week-Over-Week',
+      synopsis: `MBA's Weekly Mortgage Applications Survey shows purchase volume up 3.1%, driven primarily by conventional loan applications. Refinance activity remains muted at current rate levels, representing just 28% of total application volume.`,
+      time: '3h ago',
+    },
+    {
+      source: 'National Mortgage News', color: '#2BBFAA',
+      url: 'https://www.nationalmortgagenews.com',
+      headline: 'CFPB Reviews Servicer Rules Following Forbearance Data',
+      synopsis: 'The bureau is analyzing post-pandemic forbearance performance before issuing updated servicing guidance. New rules are expected in Q3 and may affect loss mitigation waterfall requirements for non-agency servicers.',
+      time: '5h ago',
+    },
+    {
+      source: 'HousingWire', color: '#3B8BEB',
+      url: 'https://www.housingwire.com',
+      headline: 'Spring Demand Holds Steady Despite Rate Volatility',
+      synopsis: 'Pending home sales rose 1.2% in February, defying expectations as buyers adapt to the higher-rate environment. Economists note that inventory expansion in Sun Belt markets is supporting deal flow even as affordability remains stretched.',
+      time: '7h ago',
+    },
+    {
+      source: 'National Mortgage News', color: '#2BBFAA',
+      url: 'https://www.nationalmortgagenews.com',
+      headline: 'Warehouse Lending Capacity Tightens at Regional Banks',
+      synopsis: `Several mid-size banks have reduced mortgage warehouse lines, putting pressure on independent mortgage companies' liquidity. IMBs are increasingly turning to non-bank warehouse providers at higher advance rates.`,
+      time: '9h ago',
+    },
+    {
+      source: 'Mortgage Bankers Assoc.', color: '#E8B84B',
+      url: 'https://www.mba.org',
+      headline: 'Multifamily Originations Up 8% from Q4 — Agencies Lead Recovery',
+      synopsis: `MBA's quarterly commercial/multifamily survey shows debt originations strengthening, with Fannie Mae and Freddie Mac leading volume growth. Cap rate compression in primary markets has slowed, but secondary market transaction activity is picking up.`,
+      time: '11h ago',
+    },
+  ];
+
+  (function buildSignals() {
+    const feed = document.getElementById('signalsFeed');
+    SIGNALS.forEach(s => {
+      const item = document.createElement('div');
+      item.className = 'signal-item';
+      item.innerHTML = `
+        <div class="signal-top">
+          <a class="signal-source" href="${s.url}" target="_blank" rel="noopener"
+             style="color:${s.color};background:${s.color}22;border:1px solid ${s.color}44;text-decoration:none;">
+            ${s.source} ↗
+          </a>
+          <span class="signal-time">${s.time}</span>
+        </div>
+        <div class="signal-headline">${s.headline}</div>
+        <div class="signal-synopsis">${s.synopsis}</div>
+        <span class="signal-arrow">▶</span>
+      `;
+      // Expand on row click, but let the source link navigate freely
+      item.addEventListener('click', e => {
+        if (e.target.closest('.signal-source')) return;
+        item.classList.toggle('expanded');
+      });
+      feed.appendChild(item);
+    });
+  })();
+
+</script>
+
+</body>
+</html>
