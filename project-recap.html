@@ -946,6 +946,204 @@
 
   </div><!-- /session 2 -->
 
+  <!-- ══════════════════════════ SESSION 3 ENTRY ══════════════════════════════ -->
+  <div class="page-break"></div>
+  <div class="body-content" style="padding-top: 48px;">
+
+    <div style="display:flex; align-items:center; gap:14px; margin-bottom:6px;">
+      <div style="font-size:9pt; letter-spacing:0.18em; text-transform:uppercase; color:var(--gold); font-weight:600;">Session 3</div>
+      <div style="flex:1; height:1px; background:var(--rule);"></div>
+      <div style="font-size:9pt; color:var(--soft);">April 2026</div>
+    </div>
+    <h2 style="font-size:18pt; font-weight:700; color:var(--navy); margin-bottom:4px;">UX Polish, Celestial Layer &amp; Workflow Intelligence</h2>
+    <p style="color:var(--mid); margin-bottom:28px;">No new investors this session — full focus on product experience. Added a live animated celestial background, scenario history with localStorage persistence, per-investor summary card toggles, intentional match flow gating, and pushed all changes live to GitHub Pages.</p>
+
+    <div class="snapshot-row" style="margin-bottom:32px;">
+      <div class="snapshot-item">
+        <div class="snap-num">5</div>
+        <div class="snap-label">Investors Live</div>
+      </div>
+      <div class="snapshot-item">
+        <div class="snap-num">8</div>
+        <div class="snap-label">History Slots</div>
+      </div>
+      <div class="snapshot-item">
+        <div class="snap-num">∞</div>
+        <div class="snap-label">Shooting Stars</div>
+      </div>
+      <div class="snapshot-item">
+        <div class="snap-num">1</div>
+        <div class="snap-label">File. No Install.</div>
+      </div>
+    </div>
+
+    <!-- Advancements -->
+    <div class="section-head">
+      <div class="section-num">S3.01</div>
+      <h2>Advancements This Session</h2>
+    </div>
+    <div class="section-rule"></div>
+
+    <div class="advance-list">
+
+      <div class="advance-item">
+        <div class="advance-icon">✨</div>
+        <div class="advance-text">
+          <h4>Celestial Background Layer — Stars, Constellations &amp; Shooting Stars</h4>
+          <p>Added a full canvas-based ambient background: 180 twinkling stars (~20% warm gold-tinted), 8 named constellation clusters connected by faint gold lines with glowing node stars, and randomized shooting stars appearing every 5–13 seconds with a gold-to-white gradient streak and glowing head. All elements respond to mouse movement via a smooth multi-depth parallax system — constellations and stars shift at independent rates, creating a genuine sense of layered space. Touch parallax added for mobile. Entirely self-contained and marked for single-line disable if needed.</p>
+        </div>
+      </div>
+
+      <div class="advance-item">
+        <div class="advance-icon">📱</div>
+        <div class="advance-text">
+          <h4>Mobile Rendering Fixed &amp; Calibrated</h4>
+          <p>Canvas was invisible on mobile due to a z-index stacking conflict — <code>body::before</code> (opaque background gradient) and the canvas shared z-index 0, with mobile Safari painting the pseudo-element on top. Fixed by bumping canvas to z-index 1 and <code>.page</code> to z-index 2. Also replaced <code>inset: 0</code> shorthand (patchy old iOS support) with explicit top/left declarations. Star brightness separately reduced 35% on screens ≤768px via a <code>window.matchMedia</code> dim multiplier applied at draw time — desktop unchanged.</p>
+        </div>
+      </div>
+
+      <div class="advance-item">
+        <div class="advance-icon">🕘</div>
+        <div class="advance-text">
+          <h4>Scenario History — localStorage-Backed Recent Runs Panel</h4>
+          <p>Added a collapsible "Recent Scenarios" panel below the form (inside dashboard-left) that persists the last 8 searches across sessions using localStorage. Each entry shows program badge, transaction, occupancy, LTV, FICO, match count (green if &gt;0, muted if zero), and a live relative timestamp ("2m ago", "1h ago"). Clicking any entry instantly re-populates all form fields and re-runs the match. Identical scenarios deduplicate and bubble to the top rather than creating duplicates. Panel hides itself when history is empty.</p>
+        </div>
+      </div>
+
+      <div class="advance-item">
+        <div class="advance-icon">🎛️</div>
+        <div class="advance-text">
+          <h4>Summary Card Investor Toggles — Include / Exclude per Row</h4>
+          <p>Each eligible investor row in the summary card modal now carries a small circular toggle button (✕ to exclude, + to re-include). Excluded rows dim to 38% opacity, name gets a strikethrough, the green dot turns red, and the toggle swaps to a gold plus. Both the canvas image export and the PDF print path respect the selection — excluded rows are stripped from the canvas render and removed from the print clone before output. The toggle state resets each time the modal is opened fresh.</p>
+        </div>
+      </div>
+
+      <div class="advance-item">
+        <div class="advance-icon">🔒</div>
+        <div class="advance-text">
+          <h4>AutoMatch Gating — Intentional Result Flow</h4>
+          <p>Previously, changing any form field while results were displayed immediately fired a new match — making it impossible to adjust multiple fields without intermediate results flashing. Now a <code>resultsShown</code> flag blocks autoMatch once a result batch is visible. All field changes are silently accepted without re-triggering. The loan officer changes everything they need, then clicks "Find Eligible Investors" deliberately. First-run autoMatch (before any results) still fires immediately as before.</p>
+        </div>
+      </div>
+
+      <div class="advance-item">
+        <div class="advance-icon">🚀</div>
+        <div class="advance-text">
+          <h4>GitHub Pages — Live Deployment Pipeline Established</h4>
+          <p>All session changes committed and pushed to <code>gfreesie.github.io</code>. Confirmed the full edit → commit → push → live deploy cycle works end-to-end. Going forward, every session ends with a push so the live URL always reflects the current build. No build step, no CI — GitHub Pages serves the HTML file directly within ~60 seconds of push.</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Still Needed -->
+    <div class="section-head" style="margin-top:32px;">
+      <div class="section-num">S3.02</div>
+      <h2>What Is Still Needed</h2>
+    </div>
+    <div class="section-rule"></div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Item</th>
+          <th>Details</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Loan Amount Input &amp; Tier Routing</td>
+          <td>All investor matrices are tiered by loan amount. Currently the engine uses the ≤$1.5M tier as a baseline and does not enforce caps. Adding a Loan Amount field would route each scenario to the correct tier and surface cases where a scenario crosses into a stricter bucket — eliminating a known source of overestimates.</td>
+          <td><span class="status-badge status-partial">Next Feature</span></td>
+        </tr>
+        <tr>
+          <td>LO / Branch QA Testing</td>
+          <td>Matrix accuracy needs to be validated by active loan officers against known approved and declined scenarios. No amount of data entry replaces real-world boundary testing from people who work these programs daily.</td>
+          <td><span class="status-badge status-pending">QA Needed</span></td>
+        </tr>
+        <tr>
+          <td>Hosting / Distribution Decision</td>
+          <td>Currently live at gfreesie.github.io for development access. Production distribution method (internal URL, SharePoint link, or file drop) not yet decided.</td>
+          <td><span class="status-badge status-pending">Decision</span></td>
+        </tr>
+        <tr>
+          <td>Additional Investors</td>
+          <td>Architecture is open. Any new investor is a data object — no UI changes. Identify investors beyond the current five (Luxury, First National, Acra, NewRez, Deephaven) and provide rate sheets.</td>
+          <td><span class="status-badge status-partial">Open</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Wow Suggestions -->
+    <div class="section-head" style="margin-top:36px;">
+      <div class="section-num">S3.03</div>
+      <h2>Two Suggestions to Wow the Audience</h2>
+    </div>
+    <div class="section-rule"></div>
+
+    <p style="margin-bottom:18px;">
+      Both of these are additive — they require no changes to the existing engine and can be built on top of the current architecture without refactoring.
+    </p>
+
+    <div class="suggestion-cards">
+
+      <div class="suggestion-card">
+        <div class="suggestion-num">01</div>
+        <span class="sub-label">Reverse Eligibility Lookup</span>
+        <h3>"What Would It Take?" Mode</h3>
+        <p>
+          Instead of asking "who accepts this scenario?", flip the question: given a target investor
+          and program, what is the minimum FICO and maximum LTV the borrower needs to qualify?
+          The loan officer enters the investor they want, picks the program and transaction, and
+          the engine tells them exactly what the borrower needs to hit — and how close they currently
+          are. This turns a lookup tool into a coaching tool, and gives the LO something concrete
+          to tell the borrower about how to strengthen their file.
+        </p>
+      </div>
+
+      <div class="suggestion-card">
+        <div class="suggestion-num">02</div>
+        <span class="sub-label">Loan Amount Tier Awareness</span>
+        <h3>Tier-Aware Matching With Live Limit Flags</h3>
+        <p>
+          Add a Loan Amount field and wire it into the matrix lookup so the engine selects the
+          correct tier automatically. More importantly: if a scenario sits within $50K of a tier
+          boundary, surface a visible flag — "Dropping to $1.49M unlocks Acra's ≤$1.5M tier at
+          85% LTV." This transforms the tool from a passive lookup into an active deal-structuring
+          assistant. It's the kind of insight that makes loan officers feel like they have an expert
+          sitting next to them — and that's exactly what this tool should be.
+        </p>
+      </div>
+
+    </div>
+
+    <!-- Lesson Learned -->
+    <div class="section-head" style="margin-top:36px;">
+      <div class="section-num">S3.04</div>
+      <h2>Key Insights — Building Better, Faster, Leaner</h2>
+    </div>
+    <div class="section-rule"></div>
+
+    <div class="lesson-box">
+      <div class="lesson-eyebrow">Token Efficiency Principles — Refined This Session</div>
+      <h3>Read Less, Target More. Anchor Before You Edit.</h3>
+      <p>
+        The most expensive habit in a build session is reading files in large blocks to "get oriented." A 37,000-token HTML file read in full costs more than most edits. The correct pattern: <strong style="color:#E8B84B;">Grep first with line numbers, read only the anchoring block, then edit.</strong> A 5-line read around a known anchor is almost always sufficient to write a precise Edit call. Context is earned through targeting, not scanning.
+      </p>
+      <p>
+        <strong style="color:#E8B84B;">Parallel tool calls are the single highest-leverage habit.</strong> Reading two file sections, running git status and git log, or making independent CSS and JS reads — all of these can fire simultaneously. Every sequential call that could have been parallel is a full round-trip of latency burned for no reason.
+      </p>
+      <p>
+        <strong style="color:#E8B84B;">Self-contained feature blocks pay for themselves.</strong> Wrapping the celestial layer in clearly marked start/end comment blocks with a single-flag disable took 20 extra seconds to write and saved the entire "how do I undo this?" conversation. Any ambient or cosmetic feature should be wrapped this way. The principle extends to any code that's likely to be toggled: isolate it at write time, not removal time.
+      </p>
+      <p>
+        <strong style="color:#E8B84B;">Deduplicate before you implement.</strong> The summary card toggle, the autoMatch gate, and the history panel all required understanding exactly one function each before writing. Reading the surrounding noise — unrelated handlers, styling blocks, unrelated state — adds tokens without adding understanding. Know the function you're touching, know its inputs and outputs, stop there.
+      </p>
+    </div>
+
+  </div><!-- /session 3 -->
+
   <!-- ═══════════════════════════ FOOTER ═════════════════════════════════════ -->
   <div class="doc-footer">
     <span><strong>Land Home Financial Services, Inc.</strong> &nbsp;·&nbsp; NMLS #1796</span>
